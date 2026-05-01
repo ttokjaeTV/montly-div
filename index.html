@@ -1,0 +1,1829 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>똑재TV · 국내 상장 월배당 ETF 트래커</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<style>
+:root {
+  color-scheme: light;
+  --bg: #fdf8ef;          /* 크림베이지 */
+  --bg2: #fff;
+  --ink: #2b2118;
+  --ink2: #6b5d4e;
+  --line: #ead7b9;
+  --line2: #f1e4cc;
+  --orange: #e87b1a;       /* 똑재TV 오렌지 */
+  --orange2: #f59e3d;
+  --orange-bg: #fff1dc;
+  --green: #0e8a3a;
+  --red: #d33024;
+  --blue: #1f5fa8;
+  --tag-bg: #faecd0;
+  --tag-ink: #7a5614;
+  --warn: #fff8db;
+  --warn-line: #f0d378;
+  --shadow: 0 1px 0 rgba(0,0,0,0.04), 0 8px 24px rgba(120,80,30,0.06);
+}
+* { box-sizing: border-box; }
+html, body { margin:0; padding:0; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Pretendard", "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+.wrap { max-width: 1480px; margin: 0 auto; padding: 16px 18px 80px; transition: max-width .2s ease; }
+header.top {
+  display:flex; align-items:flex-end; justify-content:space-between;
+  gap:16px; flex-wrap:wrap; margin-bottom:14px;
+}
+header.top h1 {
+  font-size: 24px; margin:0 0 4px; letter-spacing:-0.02em; font-weight: 800; color:#3a2a1a;
+}
+header.top .sub { color: var(--ink2); font-size: 14px; }
+header.top .badge {
+  display:inline-block; padding: 3px 10px; border-radius:999px;
+  background: var(--orange-bg); color: var(--orange); font-weight:700;
+  font-size: 13px; vertical-align: middle; margin-left:6px;
+}
+.notice {
+  background: var(--warn);
+  border:1px solid var(--warn-line);
+  border-radius:10px;
+  padding:12px 16px;
+  margin-bottom: 14px;
+  color:#5d4a18;
+  font-size: 14px;
+}
+.notice b { color:#3f3009; }
+.controls {
+  background: var(--bg2);
+  border:1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin-bottom: 14px;
+  box-shadow: var(--shadow);
+}
+.controls .row {
+  display:flex; gap:10px; flex-wrap:wrap; align-items:center;
+}
+.controls .row + .row { margin-top: 10px; padding-top: 10px; border-top:1px dashed var(--line2); }
+.controls label { font-weight:700; color:#5a4530; font-size:14px; margin-right:6px; }
+.search {
+  flex:1; min-width:220px;
+  display:flex; align-items:center; gap:8px;
+  background: #fff8ec; border:1px solid var(--line); border-radius: 999px; padding:8px 14px;
+}
+.search input {
+  flex:1; border:0; background:transparent; outline:0; font-size:15px; color:var(--ink);
+}
+.tabs { display:flex; gap:6px; flex-wrap:wrap; }
+.tabs button {
+  border:1px solid var(--line);
+  background: var(--bg2);
+  color: var(--ink);
+  padding: 7px 14px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 14px; font-weight: 600;
+}
+.tabs button.on {
+  background: var(--orange);
+  color: #fff;
+  border-color: var(--orange);
+}
+.chips { display:flex; gap:6px; flex-wrap:wrap; }
+.chips button {
+  border:1px solid var(--line);
+  background: #fff;
+  color: var(--ink2);
+  padding: 5px 11px;
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 13.5px;
+}
+.chips button.on {
+  background: var(--orange-bg);
+  color: var(--orange);
+  border-color: var(--orange2);
+  font-weight: 700;
+}
+.cnt { color: var(--ink2); font-size: 14px; }
+.cnt b { color: var(--orange); font-size: 16px; }
+.summary {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.kpi {
+  background: var(--bg2);
+  border:1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 12px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.kpi .lbl { color: var(--ink2); font-size: 13px; font-weight: 600; }
+.kpi .val { font-size: 22px; font-weight: 800; color: #3a2a1a; margin-top: 4px;}
+.kpi .sub { color: var(--ink2); font-size: 12.5px; margin-top: 3px; }
+
+.macro-section {
+  margin-bottom: 14px;
+}
+.macro-table-wrap {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  overflow-x: auto;
+  box-shadow: var(--shadow);
+}
+.macro-table-wrap h4 {
+  margin: 0 0 8px;
+  font-size: 13.5px;
+  color: #5a4530;
+  font-weight: 700;
+}
+table.macro {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+table.macro th, table.macro td {
+  padding: 5px 6px;
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--line2);
+}
+table.macro thead th {
+  background: #fcecc8;
+  color: #5a4530;
+  font-weight: 700;
+  font-size: 11.5px;
+}
+table.macro tbody td:first-child,
+table.macro thead th:first-child {
+  background: #fff8ec;
+  font-weight: 700;
+  text-align: left;
+  padding-left: 10px;
+}
+table.macro tbody tr.row-pct td { font-weight: 700; }
+table.macro tbody tr td.note-cell {
+  background: var(--orange-bg);
+  color: var(--orange);
+  font-weight: 800;
+  font-size: 12px;
+}
+.macro-section .label-ytd { background: var(--warn); color: #6a5018; border:1px solid var(--warn-line); }
+.macro-section .label-month { background: #d8f5e0; color: #1d6f42; border:1px solid #95d5a8; }
+
+.tableWrap {
+  background: var(--bg2);
+  border:1px solid var(--line);
+  border-radius:14px;
+  overflow:hidden;
+  box-shadow: var(--shadow);
+}
+.tableScroll {
+  overflow-x:auto;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+table.dt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+table.dt thead th {
+  position: sticky; top: 0; z-index: 5;
+  background: #fcecc8;
+  color:#5a4530;
+  font-weight: 700;
+  text-align: center;
+  padding: 11px 10px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+  font-size: 13.5px;
+}
+/* 종목(코드) 컬럼은 좌측 정렬 */
+table.dt thead th[data-k="nm"] { text-align: left; }
+/* 배당기준 컬럼(2번째)은 가운데 정렬 */
+table.dt tbody tr:not(.expand) td:nth-child(2) { text-align: center; }
+table.dt thead th.sortable { cursor: pointer; user-select: none; }
+table.dt thead th.sortable:hover { background:#f8dfa3; color:#3a2a1a; }
+table.dt thead th .arr { font-size: 11px; color:var(--orange); margin-left:3px; }
+table.dt thead th .sublbl {
+  display:inline-block; padding: 1px 5px; margin: 0 1px;
+  border-radius: 4px; cursor: pointer;
+  color: var(--ink2); font-weight: 500;
+  transition: background .15s;
+}
+table.dt thead th .sublbl:hover { background: #f8dfa3; color:#3a2a1a; }
+table.dt thead th .sublbl.on { background: var(--orange); color: #fff; font-weight: 700; }
+table.dt thead th .sublbl.on .arr { color: #fff; }
+table.dt tbody td {
+  padding: 10px 10px;
+  border-bottom: 1px solid var(--line2);
+  white-space: nowrap;
+  vertical-align: middle;
+}
+table.dt tbody tr:hover td { background: #fff8ec; }
+table.dt tbody tr.midDiv td:first-child { box-shadow: inset 4px 0 0 var(--orange); }
+table.dt tbody tr.expand td {
+  background: #fff5e0;
+  white-space: normal;
+  padding: 12px 18px;
+}
+.expand-inner { width: 100%; }
+.nm-cell {
+  display:flex; align-items:center; gap:8px;
+  font-weight: 700;
+  color: #3a2a1a;
+  cursor: pointer;
+  font-size: 14.5px;
+}
+.nm-cell .toggle {
+  display:inline-flex; align-items:center; justify-content:center;
+  width:22px; height:22px; border-radius:6px;
+  background: var(--orange-bg); color: var(--orange); font-size:14px; font-weight:700;
+}
+.nm-cell .toggle.open { background: var(--orange); color: #fff; }
+.code { color: var(--ink2); font-size: 12.5px; font-weight: 500; }
+.nm-text { min-width: 0; }
+.nm-chips { margin-top: 3px; display: flex; gap: 2px; flex-wrap: wrap; }
+.tag {
+  display:inline-block; padding: 1px 5px; border-radius:4px;
+  background: var(--tag-bg); color:var(--tag-ink);
+  font-size: 9.5px; font-weight: 600;
+  margin-right: 2px;
+  letter-spacing: -0.02em;
+}
+/* 배당기준일 태그 (월중/월말 동일 사이즈) */
+.dt-tag {
+  display:inline-block; padding: 3px 10px; border-radius:6px;
+  font-size: 12px; font-weight: 700;
+  letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+.dt-tag.dt-mid { background: var(--orange-bg); color: var(--orange); }
+.dt-tag.dt-end { background: var(--tag-bg); color: var(--tag-ink); }
+.up { color: var(--red); font-weight: 700; }
+.down { color: var(--blue); font-weight: 700; }
+.flat { color: var(--ink2); }
+.num { text-align:right; font-variant-numeric: tabular-nums; font-feature-settings: "tnum"; }
+.detail-grid {
+  display:grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  padding: 4px 0;
+}
+.detail-grid .full-row { grid-column: 1 / -1; }
+.chart-card {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+}
+.chart-card-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.chart-card h4 {
+  margin: 0; font-size: 14px; color: #5a4530; font-weight: 700;
+}
+.chart-period-tabs { display: flex; gap: 4px; }
+.chart-period-tabs button {
+  border: 1px solid var(--line); background: #fff;
+  color: var(--ink2); padding: 3px 10px; border-radius: 999px;
+  cursor: pointer; font-size: 11.5px; font-weight: 600;
+}
+.chart-period-tabs button.on {
+  background: var(--orange); color: #fff; border-color: var(--orange);
+}
+.chart-canvas-wrap {
+  position: relative; height: 220px;
+}
+.chart-loading {
+  display: flex; align-items: center; justify-content: center;
+  height: 100%; color: var(--ink2); font-size: 12.5px;
+}
+.detail-card {
+  background: #fff;
+  border:1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.detail-card h4 {
+  font-size: 14px; margin: 0 0 8px;
+  color: #5a4530; font-weight: 700;
+  border-bottom:1px dashed var(--line2);
+  padding-bottom: 6px;
+}
+.detail-card .pair {
+  display:flex; justify-content:space-between; padding: 4px 0;
+  font-size: 13.5px;
+}
+.detail-card .pair .k { color: var(--ink2); }
+.detail-card .pair .v { font-weight: 700; }
+.divbar {
+  display:grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top:8px;
+}
+.divbar .cell {
+  font-size: 12.5px; text-align: center;
+  background: #f5e8c8; border-radius: 5px; padding: 5px 2px;
+  position: relative; font-weight: 700;
+}
+.divbar .cell.empty { background:#f4f4f0; color:#bbb; font-weight:500; }
+.divbar .cell.this { background: var(--orange); color: #fff; }
+.divbar .cell .lab {
+  display:block; font-size: 11px; color: var(--ink2); font-weight: 500; margin-bottom: 2px;
+}
+.divbar .cell.this .lab { color: rgba(255,255,255,0.85); }
+.note {
+  font-size: 13px; color: var(--ink2);
+  background: #fffaee;
+  border:1px dashed var(--line);
+  padding: 8px 12px; border-radius: 8px;
+  margin-top:8px;
+}
+footer {
+  margin-top: 22px; color: var(--ink2); font-size: 13px;
+  text-align: center;
+}
+.empty-state {
+  padding: 40px 20px; text-align:center; color: var(--ink2); font-size: 14px;
+}
+
+/* ======== PC MAIN MODE (영상 캡처 친화적 큰 글자, 컴팩트 레이아웃) ======== */
+.wrap { font-size: 24px; line-height: 1.4; padding-top: 8px; padding-bottom: 30px; }
+.wrap header.top { margin-bottom: 8px; align-items: center; }
+.wrap header.top h1 { font-size: 32px; margin: 0 0 2px; }
+.wrap header.top .sub { display: none; }
+.wrap header.top .badge { font-size: 17px; padding: 4px 12px; }
+.wrap .notice { display: none; }
+.wrap .controls { padding: 8px 14px; margin-bottom: 8px; }
+.wrap .controls .row + .row { margin-top: 6px; padding-top: 6px; }
+.wrap .controls label { font-size: 17px; }
+.wrap .cnt { font-size: 18px; }
+.wrap .cnt b { font-size: 22px; }
+.wrap .search input { font-size: 18px; }
+.wrap .search { padding: 8px 14px; }
+.wrap .tabs button { font-size: 17px; padding: 6px 14px; }
+.wrap .chips button { font-size: 16px; padding: 5px 12px; }
+.wrap .summary { gap: 8px; margin-bottom: 8px; }
+.wrap .kpi { padding: 10px 14px; }
+.wrap .kpi .lbl { font-size: 16.5px; }
+.wrap .kpi .val { font-size: 30px; margin-top: 2px; }
+.wrap .kpi .sub { font-size: 14.5px; margin-top: 2px; }
+.wrap .tableScroll { max-height: 85vh; }
+.wrap table.dt { font-size: 19px; }
+.wrap table.dt thead th { font-size: 18px; padding: 10px 12px; }
+.wrap table.dt thead th .sublbl { font-size: 15px; padding: 2px 6px; }
+.wrap table.dt tbody td { padding: 8px 12px; line-height: 1.25; }
+/* 종목명 컬럼 가로폭 제한 — 2025 TR 컬럼까지 한 화면에 들어가도록 */
+.wrap table.dt thead th:first-child,
+.wrap table.dt tbody tr:not(.expand) td:first-child {
+  max-width: 280px;
+  width: 280px;
+}
+.wrap .nm-cell { font-size: 16px; gap: 8px; align-items: flex-start; }
+.wrap .nm-cell .toggle { width: 24px; height: 24px; font-size: 16px; border-radius: 6px; flex-shrink: 0; }
+.wrap .nm-text { min-width: 0; flex: 1; }
+.wrap .nm-name { font-size: 15px; line-height: 1.3; word-break: keep-all; white-space: normal; font-weight: 700; }
+.wrap .code { font-size: 14px; }
+.wrap .tag { font-size: 11.5px; padding: 1px 5px; }
+.wrap .dt-tag { font-size: 16px; padding: 4px 12px; }
+.wrap .nm-chips { margin-top: 2px; }
+.wrap .detail-card { padding: 9px 12px; }
+.wrap .detail-card h4 { font-size: 14px; margin: 0 0 5px; padding-bottom: 4px; }
+.wrap .detail-card .pair { font-size: 13px; padding: 2px 0; }
+.wrap .note { font-size: 12px; padding: 6px 8px; margin-top: 6px; }
+.wrap .divbar .cell { font-size: 15px; padding: 6px 3px; }
+.wrap .divbar .cell .lab { font-size: 13px; }
+/* 모바일 안내 배너 (모바일에서만 표시) */
+.mobile-only-notice { display: none; }
+
+/* ======== MOBILE 자동 적용 (max-width: 700px) ======== */
+@media (max-width: 700px) {
+  /* 모바일 안내 배너 표시 */
+  .mobile-only-notice {
+    display: block !important;
+    background: var(--orange-bg);
+    color: var(--orange);
+    padding: 9px 12px;
+    border-radius: 10px;
+    font-size: 12.5px;
+    line-height: 1.45;
+    margin-bottom: 10px;
+    font-weight: 600;
+    text-align: center;
+    border: 1px solid var(--orange2);
+  }
+  .mobile-only-notice b { color: #c45a00; }
+  /* 모바일 핵심 4개 컬럼만 표시 (3,4,5,8,9,10번 컬럼 숨김) */
+  .wrap table.dt th:nth-child(3),
+  .wrap table.dt td:nth-child(3),
+  .wrap table.dt th:nth-child(4),
+  .wrap table.dt td:nth-child(4),
+  .wrap table.dt th:nth-child(5),
+  .wrap table.dt td:nth-child(5),
+  .wrap table.dt th:nth-child(8),
+  .wrap table.dt td:nth-child(8),
+  .wrap table.dt th:nth-child(9),
+  .wrap table.dt td:nth-child(9),
+  .wrap table.dt th:nth-child(10),
+  .wrap table.dt td:nth-child(10) {
+    display: none;
+  }
+  .wrap table.dt tbody tr.expand td { padding: 10px 8px; }
+  .wrap .expand-inner { width: 100%; position: static; }
+  .wrap .tableScroll { overflow-x: hidden; max-height: 60vh; }
+  /* 모바일 전체 사이즈 축소 */
+  .wrap { font-size: 14px; padding: 14px 12px 60px; }
+  .wrap header.top h1 { font-size: 19px; }
+  .wrap header.top .sub { display: block; font-size: 12.5px; }
+  .wrap header.top .badge { font-size: 11px; padding: 2px 8px; }
+  .wrap .controls { padding: 10px 12px; }
+  .wrap .controls .row { gap: 6px; }
+  .wrap .controls label { font-size: 12.5px; display: block; width: 100%; margin-bottom: 4px; }
+  .wrap .search input { font-size: 13px; }
+  .wrap .search { padding: 6px 12px; }
+  .wrap .tabs button { font-size: 12px; padding: 5px 10px; }
+  .wrap .chips button { font-size: 11.5px; padding: 4px 9px; }
+  .wrap .summary { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .wrap .kpi { padding: 8px 10px; }
+  .wrap .kpi .lbl { font-size: 11px; }
+  .wrap .kpi .val { font-size: 17px; }
+  .wrap .kpi .sub { font-size: 10.5px; }
+  .wrap table.dt { font-size: 12px; table-layout: fixed; width: 100%; }
+  .wrap table.dt thead th { font-size: 11px; padding: 7px 4px; }
+  .wrap table.dt tbody td { padding: 7px 4px; }
+  /* 모바일 종목명 컬럼: max-width 해제, 4개 컬럼 비율 분배 */
+  .wrap table.dt thead th:first-child,
+  .wrap table.dt tbody tr:not(.expand) td:first-child {
+    max-width: none; width: 42%;
+  }
+  .wrap table.dt thead th:nth-child(2),
+  .wrap table.dt tbody tr:not(.expand) td:nth-child(2) { width: 18%; }
+  .wrap table.dt thead th:nth-child(6),
+  .wrap table.dt tbody tr:not(.expand) td:nth-child(6) { width: 20%; }
+  .wrap table.dt thead th:nth-child(7),
+  .wrap table.dt tbody tr:not(.expand) td:nth-child(7) { width: 20%; }
+  .wrap .nm-cell { font-size: 11.5px; gap: 4px; align-items: flex-start; }
+  .wrap .nm-cell .toggle { width: 18px; height: 18px; font-size: 11px; flex-shrink: 0; }
+  .wrap .nm-text { min-width: 0; flex: 1; }
+  .wrap .nm-name { font-size: 11.5px; line-height: 1.2; word-break: keep-all; white-space: normal; font-weight: 700; }
+  .wrap .code { font-size: 10px; }
+  .wrap .nm-chips { display: none; }
+  .wrap .tag { font-size: 9.5px; padding: 1px 4px; }
+  .wrap .dt-tag { font-size: 10.5px; padding: 2px 6px; }
+  .wrap .detail-grid { grid-template-columns: 1fr !important; gap: 8px; }
+  .wrap .divbar { grid-template-columns: repeat(7, 1fr) !important; }
+  .wrap .detail-card { padding: 8px 10px; }
+  .wrap .detail-card h4 { font-size: 12.5px; }
+  .wrap .detail-card .pair { font-size: 12px; }
+}
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <header class="top">
+    <div>
+      <h1>똑재TV · 국내 상장 월배당 ETF 트래커 <span class="badge" id="periodBadge">2026년 3월 기준</span></h1>
+      <div class="sub">분배기준일에 맞춰 월중·월말 ETF를 분리해서 보여줍니다. 종목명을 누르면 월별 분배금·수익률·시총 변화를 확인할 수 있어요.</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <button id="xlsxBtn" type="button" title="168개 전체 데이터를 엑셀(XLSX) 파일로 저장 — 자동필터 켜져있음" style="background:#1d6f42; color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);">📊 엑셀 저장</button>
+      <div class="cnt"><b id="cntFiltered">0</b> / <span id="cntTotal">0</span> 종목 표시</div>
+    </div>
+  </header>
+
+  <div class="mobile-only-notice">
+    📱 모바일에서는 핵심 4개 컬럼(종목·배당기준·분배금·분배율)만 표시됩니다.
+    <br>전체 데이터(시총·수익률·2025 TR 등)는 <b>PC에서 확인</b>해주세요.
+  </div>
+
+  <div class="controls">
+    <div class="row">
+      <div class="search">
+        <span>🔍</span>
+        <input id="q" type="text" placeholder="종목명·종목코드·설명 검색 (예: SCHD, KODEX, 091170, 커버드콜)">
+      </div>
+      <div class="tabs" role="tablist" aria-label="배당시점">
+        <button data-when="all" class="on">전체</button>
+        <button data-when="mid">월중 배당만 (15일경)</button>
+        <button data-when="end">월말 배당만 (말일경)</button>
+      </div>
+    </div>
+    <div class="row">
+      <label>구분1</label>
+      <div class="chips" id="f1"></div>
+    </div>
+    <div class="row">
+      <label>구분2</label>
+      <div class="chips" id="f2"></div>
+    </div>
+    <div class="row">
+      <label>구분3</label>
+      <div class="chips" id="f3"></div>
+    </div>
+    <div class="row" id="f4Toggle" style="padding-top:8px;">
+      <button id="f4ToggleBtn" type="button" style="border:1px dashed var(--line); background:transparent; color:var(--ink2); padding:5px 12px; border-radius:999px; cursor:pointer; font-size:12.5px;">
+        ＋ 구분4 (세부 분류) 펼치기
+      </button>
+      <span id="f4Active" style="color:var(--orange); font-weight:700; font-size:12.5px; margin-left:6px;"></span>
+    </div>
+    <div class="row" id="f4Row" style="display:none;">
+      <label>구분4</label>
+      <div class="chips" id="f4"></div>
+    </div>
+  </div>
+
+  <div class="summary" id="summary"></div>
+
+  <div id="macroSection" class="macro-section"></div>
+
+  <div class="tableWrap">
+    <div class="tableScroll">
+      <table class="dt" id="tbl">
+        <thead>
+          <tr>
+            <th class="sortable" data-k="nm">종목 (코드)</th>
+            <th class="sortable" data-k="dt">배당기준</th>
+            <th class="sortable num" data-k="pr3">분배금 공시일<br>종가</th>
+            <th class="sortable num" data-k="mcCurr">시총</th>
+            <th class="num" data-grp="mc">시총 증감<br><span style="font-size:11px;"><span class="sublbl" data-k="mcDiff">증감액</span>/<span class="sublbl" data-k="mcDiffPct">증감률</span></span></th>
+            <th class="num" data-grp="div">분배금<br><span style="font-size:11px;"><span class="sublbl" data-k="divCurr">당월</span>/<span class="sublbl" data-k="divDiff">전월대비</span></span></th>
+            <th class="num" data-grp="dr">분배율<br><span style="font-size:11px;"><span class="sublbl" data-k="dr">당월</span>/<span class="sublbl" data-k="ax12">1년</span></span></th>
+            <th class="num" data-grp="retM">이번달 수익률<br><span style="font-size:11px;"><span class="sublbl" data-k="retM">주가</span>/<span class="sublbl" data-k="retTR">TR</span></span></th>
+            <th class="num" data-grp="ytd">올해 수익률<br><span style="font-size:11px;"><span class="sublbl" data-k="ytd">주가</span>/<span class="sublbl" data-k="ytdTR">TR</span></span></th>
+            <th class="sortable num" data-k="y2025">2025년도 TR</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    💛 똑재TV · 자료 = 운용사 분배공시 + KRX 종가 기준. 본 자료는 정보 제공이며 투자 권유가 아닙니다.
+  </footer>
+</div>
+
+<script>
+// ==== ETF DATA ============================================================
+// 스키마(positional):
+// [c1, c2, c3, c4, code, name, desc, divDate("월말"|"월중"|일자),
+//  mc1(전월시총억), mc2(당월시총억),
+//  divs(객체 {"25-12":45,...}), avgDiv,
+//  divRate(%당월), annualX12(%), annualOther(%),
+//  pr1(올해1/2가격), pr2(전월분배일가격), pr3(당월분배일가격),
+//  retM(당월수익률%), retPrev(전월총수익률%), retTR(당월TR수익률%),
+//  ytd(올해주가상승률%), y2025(작년TR%), ytdTR(올해TR%),
+//  note, note2]
+const HEADERS = ["c1","c2","c3","c4","code","nm","desc","dt","mc1","mc2","divs","avg","dr","ax12","aOther","pr1","pr2","pr3","retM","retPrev","retTR","ytd","y2025","ytdTR","note","note2"];
+
+// 분배 기준일 자동 계산 (오늘 날짜 기준)
+function getRelevantDate(today, type) {
+  const y = today.getFullYear();
+  const m = today.getMonth(); // 0-indexed
+  const d = today.getDate();
+  const m1 = m + 1; // 1-indexed
+  const refDay = (type === "월중") ? 13 : 28;
+  if (d >= refDay) {
+    return { y, m: m1, d: refDay };
+  } else {
+    let pm = m1 - 1, py = y;
+    if (pm === 0) { pm = 12; py = y - 1; }
+    return { y: py, m: pm, d: refDay };
+  }
+}
+function fmtDateMD(dt) { return `${dt.m}/${dt.d}`; }
+function getLatestPeriodLabel(today) {
+  const m = today.getMonth(), d = today.getDate(), m1 = m + 1, y = today.getFullYear();
+  if (d >= 28) return `${y}년 ${m1}월 28일 종가 기준 (마지막 = 월말 분배)`;
+  if (d >= 13) return `${y}년 ${m1}월 13일 종가 기준 (마지막 = 월중 분배)`;
+  let pm = m1 - 1, py = y;
+  if (pm === 0) { pm = 12; py = y - 1; }
+  return `${py}년 ${pm}월 28일 종가 기준 (마지막 = 월말 분배)`;
+}
+const TODAY = new Date();
+const PERIOD_LABEL = getLatestPeriodLabel(TODAY);
+
+// ==== 거시경제 지표 데이터 ============================================================
+// 분배공시일 기준 (D-2 영업일) 종가/금리 — 매월 갱신 시 신규 키 추가
+// 키: "YYYY-MM-DD", 값: [코스피, 코스닥, S&P500, 나스닥, 다우, 러셀2000, 환율, 미2y, 미10y, 미30y, 한2y, 한10y, 한30y]
+const MACRO_LABELS = ["코스피","코스닥","S&P500","나스닥","다우존스","러셀 2000","환율","미국 2년물","미국 10년물","미국 30년물","한국 2년물","한국 10년물","한국 30년물"];
+const MACRO_DATA = {
+  "2026-01-02": [4309.63, 945.57, 6858.5, 23235.6, 48382.4, 2508.2, 1441.47, 3.477, 4.189, 4.55, 2.65, 2.85, 2.70],
+  "2026-02-25": [6083.86, 1165.25, 6946.1, 23152.1, 49482.2, 2663.3, 1427.93, 3.471, 4.048, 4.42, 2.55, 2.78, 2.62],
+  "2026-03-11": [5800.0, 1100.0, 6800.0, 22500.0, 47500.0, 2580.0, 1465.0, 3.65, 4.30, 4.62, 2.62, 2.92, 2.76],
+  "2026-03-27": [5438.87, 1141.51, 6368.9, 20948.4, 45166.6, 2449.7, 1507.00, 3.914, 4.428, 4.78, 2.78, 3.05, 2.88],
+  "2026-04-13": [5808.62, 1099.84, 6520.0, 22150.0, 46500.0, 2520.0, 1480.0, 3.85, 4.38, 4.70, 2.70, 2.98, 2.82],
+  "2026-04-28": [6641.02, 1215.58, 6630.0, 22850.0, 47200.0, 2580.0, 1462.0, 3.78, 4.28, 4.62, 2.65, 2.92, 2.78]
+};
+
+// 오늘 날짜 기준으로 [연초, 전월 baseline, 당월 baseline] 키 자동 결정
+function getMacroDateKeys(today) {
+  const y = today.getFullYear();
+  const m = today.getMonth() + 1;
+  const d = today.getDate();
+  function ymd(yr, mo, da) {
+    return yr + "-" + String(mo).padStart(2,"0") + "-" + String(da).padStart(2,"0");
+  }
+  // 분배공시일 D-2 매핑: 월말=27 또는 28, 월중=11 또는 13
+  // 이번달 baseline 결정
+  let curr, prev, currType;
+  if (d >= 28) {
+    // 28일 이후: 월말 사이클 - curr=이번달 28
+    curr = ymd(y, m, 28);
+    let pm = m - 1, py = y;
+    if (pm === 0) { pm = 12; py = y - 1; }
+    prev = ymd(py, pm, 28);  // 1달 전 월말
+    if (!MACRO_DATA[prev]) prev = ymd(py, pm, 27);  // 27일 fallback
+    currType = "월말";
+  } else if (d >= 13) {
+    curr = ymd(y, m, 13);
+    let pm = m - 1, py = y;
+    if (pm === 0) { pm = 12; py = y - 1; }
+    prev = ymd(py, pm, 13);
+    if (!MACRO_DATA[prev]) prev = ymd(py, pm, 11);
+    currType = "월중";
+  } else {
+    // 1~12일: 지난달 28일이 마지막 baseline
+    let pm = m - 1, py = y;
+    if (pm === 0) { pm = 12; py = y - 1; }
+    curr = ymd(py, pm, 28);
+    if (!MACRO_DATA[curr]) curr = ymd(py, pm, 27);
+    let ppm = pm - 1, ppy = py;
+    if (ppm === 0) { ppm = 12; ppy = py - 1; }
+    prev = ymd(ppy, ppm, 28);
+    if (!MACRO_DATA[prev]) prev = ymd(ppy, ppm, 27);
+    if (!MACRO_DATA[prev]) prev = ymd(ppy, ppm, 25);  // 2/25 같은 케이스
+    currType = "월말";
+  }
+  return { yearStart: ymd(y, 1, 2), prev, curr, currType };
+}
+
+// 거시지표 한 줄 (date 라벨 + 13개 지표 값) 렌더
+function macroRowHtml(label, values, isPct, opts) {
+  opts = opts || {};
+  let html = `<tr class="${opts.cls || ""}"><td>${label}</td>`;
+  values.forEach((v) => {
+    if (v == null || isNaN(v)) {
+      html += `<td>—</td>`;
+    } else if (isPct) {
+      const arrow = v > 0 ? "▲" : (v < 0 ? "▼" : "");
+      const cls = v > 0 ? "up" : (v < 0 ? "down" : "flat");
+      html += `<td class="${cls}">${arrow}${Math.abs(v).toFixed(2)}%</td>`;
+    } else {
+      // 숫자 포맷: 1000+ 는 콤마, 미만은 소수 그대로
+      const isInt = v >= 100;
+      const fmt = isInt ? v.toLocaleString("ko-KR", { maximumFractionDigits: 2 }) : v.toFixed(3);
+      html += `<td>${fmt}</td>`;
+    }
+  });
+  if (opts.note) {
+    html += `<td class="note-cell ${opts.noteClass || ""}">${opts.note}</td>`;
+  } else {
+    html += `<td></td>`;
+  }
+  return html + `</tr>`;
+}
+
+function renderMacroSection() {
+  const host = document.getElementById("macroSection");
+  if (!host) return;
+  const keys = getMacroDateKeys(TODAY);
+  const dataYS = MACRO_DATA[keys.yearStart] || null;
+  const dataPrev = MACRO_DATA[keys.prev] || null;
+  const dataCurr = MACRO_DATA[keys.curr] || null;
+  if (!dataCurr) {
+    host.innerHTML = `<div class="macro-table-wrap" style="color:var(--ink2); font-size:12.5px;">📊 거시경제 지표 데이터 없음 (${keys.curr} 입력 필요)</div>`;
+    return;
+  }
+  function pct(a, b) {
+    if (a == null || b == null) return null;
+    return +((b - a) / a * 100).toFixed(2);
+  }
+  const ytdPcts = dataYS ? dataYS.map((v, i) => pct(v, dataCurr[i])) : MACRO_LABELS.map(() => null);
+  const monthPcts = dataPrev ? dataPrev.map((v, i) => pct(v, dataCurr[i])) : MACRO_LABELS.map(() => null);
+
+  const headerCells = MACRO_LABELS.map(l => `<th>${l}</th>`).join("");
+  const headerRow = `<thead><tr><th>구분</th>${headerCells}<th>비고</th></tr></thead>`;
+
+  const ytdLabel = `${keys.yearStart.replace(/-/g,"/").replace(/^2026\//,"")} → ${keys.curr.replace(/-/g,"/").replace(/^2026\//,"")}`;
+  const monthLabel = `${keys.prev.replace(/-/g,"/").replace(/^2026\//,"")} → ${keys.curr.replace(/-/g,"/").replace(/^2026\//,"")}`;
+
+  let html = `
+    <div class="macro-table-wrap">
+      <h4>📈 올해 수익률 비교 <span style="color:var(--ink2); font-weight:500;">· ${ytdLabel}</span></h4>
+      <table class="macro">
+        ${headerRow}
+        <tbody>
+          ${macroRowHtml(keys.yearStart.substring(5).replace("-","/"), dataYS, false)}
+          ${macroRowHtml(keys.curr.substring(5).replace("-","/"), dataCurr, false)}
+          ${macroRowHtml("증감율", ytdPcts, true, { cls:"row-pct", note:"올해 수익률", noteClass:"label-ytd" })}
+        </tbody>
+      </table>
+    </div>
+    <div class="macro-table-wrap">
+      <h4>📉 최근 한달 비교 <span style="color:var(--ink2); font-weight:500;">· ${monthLabel}</span></h4>
+      <table class="macro">
+        ${headerRow}
+        <tbody>
+          ${macroRowHtml(keys.prev.substring(5).replace("-","/"), dataPrev, false)}
+          ${macroRowHtml(keys.curr.substring(5).replace("-","/"), dataCurr, false)}
+          ${macroRowHtml("증감율", monthPcts, true, { cls:"row-pct", note:"최근 한달 수익률", noteClass:"label-month" })}
+        </tbody>
+      </table>
+    </div>
+  `;
+  host.innerHTML = html;
+}
+renderMacroSection();
+
+const RAW = [
+["주식","배당","국내","국내배당","091170","KODEX 은행","국내 대표 금융지주회사 및 은행 10개 (시가총액 가중방식)","월말",5223,4812,{"25-12":45,"26-1":45,"26-2":50,"26-3":52},49,0.35,4.25,4.66,12625,16890,14695,-13.00,23.90,-12.64,16.40,62.45,17.56,"(기존)분기→2024/08부터 월분배",""],
+["주식","배당","국내","국내배당","104530","KIWOOM 고배당","국내 배당수익률 상위 20개 종목","월중",543,492,{"25-12":60,"26-1":60,"26-2":70,"26-3":70},67,0.37,4.38,5.14,15550,21835,19175,-12.18,25.27,-11.82,23.31,49.00,24.60,"(기존)분기→2024/07부터 월분배","2025/01/14 명칭 변경"],
+["채권","채권","국내","채권","136340","RISE 중기우량회사채","국내 회사채","월말",1439,1483,{"25-12":204,"26-1":281,"26-2":124,"26-3":368},258,0.35,4.24,2.91,106085,105770,104220,-1.47,-0.15,-1.11,-1.76,2.46,-1.03,"2023/01/30부터 월분배전환",""],
+["채권","금리형","국내","금리","153130","KODEX 단기채권","정부·한국은행 발행 1년 미만 국고채·통안채","월중",7575,7319,{"25-12":238,"26-1":250,"26-2":230,"26-3":208},229,0.18,2.20,2.42,113500,113370,113295,-0.07,0.18,0.12,-0.18,2.38,0.43,"",""],
+["주식","배당","국내","국내배당","161510","PLUS 고배당주","시총 상위 200위 중 배당수익률 30위 이내","월말",26876,25648,{"25-12":78,"26-1":86,"26-2":86,"26-3":86},86,0.34,4.09,4.87,21175,29230,25220,-13.72,23.65,-13.38,19.10,54.37,20.32,"2024/05/14부터 월분배 전환",""],
+["주식","커버드콜","국내","코스피커","166400","TIGER 200커버드콜OTM","KOSPI200 + OTM 콜옵션 매도","월말",99,97,{"25-12":68,"26-1":75,"26-2":78,"26-3":78},77,0.41,4.96,5.26,17570,19750,18880,-4.41,6.32,-3.99,7.46,50.35,8.77,"",""],
+["리츠","리츠","미국","리츠","181480","ACE 미국부동산리츠(합성 H)","미국 상장 리츠 + 부동산 관련 회사 (다우존스 산출)","월말",101,94,{"25-12":220,"26-1":250,"26-2":268,"26-3":220},246,0.28,3.41,3.70,79690,84720,77335,-8.72,4.76,-8.43,-2.96,1.75,-2.03,"(기존)미지급 후 재투자→2024/08부터 월분배",""],
+["리츠","리츠","미국","리츠","182480","TIGER 미국MSCI리츠(합성 H)","미국 리츠","월말",1707,1548,{"25-12":50,"26-1":42,"26-2":10,"26-3":50},34,0.40,4.82,3.31,12340,13465,12440,-7.61,8.31,-7.21,0.81,1.11,1.64,"",""],
+["주식","배당","국내","국내배당","211900","KODEX 코리아배당성장","장기간 안정 배당 + 향후 배당 성장 예상 50개 기업","월말",978,1006,{"25-12":30,"26-1":24,"26-2":24,"26-3":30},26,0.11,1.29,1.43,21800,31360,27815,-11.30,24.10,-11.20,27.59,45.43,27.95,"2025/09부터 월분배로 전환",""],
+["채권","금리형","국내","금리","214980","KODEX 단기채권PLUS","잔존만기 1년 이하 국고·통안·특수·은행·회사·CP 우량등급","월중",20252,20070,{"25-12":236,"26-1":251,"26-2":258,"26-3":239},249,0.21,2.50,2.60,114915,114810,114650,-0.14,0.20,0.07,-0.23,2.66,0.42,"",""],
+["혼합","혼합","국내","기타","237370","KODEX 코리아배당성장채권혼합","코스피 배당성장 50지수 30% + 3년국채(KTB) 70%","월중",1503,1733,{"25-12":37,"26-1":39,"26-2":40,"26-3":39},39,0.25,3.00,3.23,14615,16300,15615,-4.20,6.85,-3.95,6.84,14.26,7.65,"2024/10/11 월분배 전환 공지",""],
+["주식","시장지수","미국","미국대표지수","245340","TIGER 미국다우존스30","다우존스","월말",1431,1371,{"25-12":55,"26-1":22,"26-2":40,"26-3":59},40,0.18,2.13,1.43,33910,34230,33265,-2.82,0.65,-2.64,-1.90,13.59,-1.55,"",""],
+["혼합","혼합","국내","기타","251600","PLUS 고배당주채권혼합","국내 고배당 기업(40%) + 국고채(60%)","월말",7777,7777,{"25-12":45,"26-1":48,"26-2":48,"26-3":48},48,0.31,3.74,4.02,14320,16680,15400,-7.67,10.39,-7.36,7.54,21.11,8.55,"2024/02/28부터 월분배",""],
+["채권","금리형","국내","금리","273140","KODEX 단기변동금리부채권액티브","국내 은행 발행 CD금리 FRN 액티브 채권형","월중",3248,3271,{"25-12":232,"26-1":246,"26-2":238,"26-3":228},237,0.20,2.38,2.48,114815,114720,114760,0.03,0.19,0.23,-0.05,2.62,0.57,"",""],
+["주식","배당","국내","국내배당","279530","KODEX 고배당주","KOSPI 종목 중 변동성 낮은 50개","월말",3936,3854,{"25-12":50,"26-1":45,"26-2":47,"26-3":65},52,0.38,4.60,4.51,13920,19505,16945,-13.12,27.72,-12.74,21.73,46.44,22.86,"2024/03/28부터 월분배",""],
+["혼합","혼합","혼합","기타","284430","KODEX 200미국채혼합","KOSPI200 + 미국국채선물 10년물(환노출) = 4:6","월중",13516,14817,{"25-12":39,"26-1":23,"26-2":26,"26-3":20},23,0.10,1.24,1.61,17175,20010,19280,-3.65,8.94,-3.54,12.26,32.95,12.66,"",""],
+["주식","커버드콜","국내","코스피커","289480","TIGER 200커버드콜","KOSPI200 + ATM 콜옵션 매도","월말",236,238,{"25-12":67,"26-1":70,"26-2":71,"26-3":73},71,0.72,8.62,8.81,9715,10260,10160,-0.97,4.07,-0.26,4.58,31.48,6.78,"",""],
+["주식","커버드콜","국내","코스피커","290080","RISE 200고배당커버드콜ATM","KOSPI200 고배당 50 + ATM 콜옵션 매도","월말",138,144,{"25-12":79,"26-1":75,"26-2":60,"26-3":60},65,0.72,8.64,9.18,8495,8370,8335,-0.42,2.85,0.30,-1.88,25.17,0.41,"2022/09/29부터 월분배전환",""],
+["리츠","리츠","기타","리츠","316300","ACE 싱가포르리츠","싱가포르 상장 리츠","월말",73,72,{"25-12":69,"26-1":57,"26-2":69,"26-3":61},62,0.43,5.21,5.09,14685,15005,14040,-6.43,0.46,-6.00,-4.39,20.60,-3.12,"(기존)미지급 후 재투자→2024/08부터 월분배",""],
+["주식","배당","국내","국내배당","322410","HANARO K고배당","국내 고배당주 투자","월말",466,465,{"25-12":50,"26-1":50,"26-2":50,"26-3":50},50,0.23,2.71,3.24,18490,24940,22135,-11.25,20.13,-11.02,19.71,43.67,20.52,"2025/09부터 월분배로 전환",""],
+["리츠","리츠","국내","리츠","329200","TIGER 리츠부동산인프라","국내 리츠","월말",13393,14809,{"25-12":33,"26-1":33,"26-2":33,"26-3":33},33,0.72,8.66,8.83,4485,4640,4575,-1.40,2.13,-0.68,2.01,18.82,4.21,"",""],
+["혼합","혼합","혼합","기타","329650","KODEX TRF3070","글로벌 선진국 주식 30% + 국내채권 70%","월중",2572,2533,{"25-12":34,"26-1":29,"26-2":26,"26-3":31},29,0.22,2.62,2.40,14335,14285,14200,-0.60,-0.17,-0.38,-0.94,7.30,-0.34,"",""],
+["혼합","혼합","혼합","기타","329660","KODEX TRF5050","글로벌 선진국 주식 50% + 국내채권 50%","월중",1023,977,{"25-12":33,"26-1":27,"26-2":27,"26-3":28},27,0.16,1.93,1.86,17600,17615,17415,-1.14,-0.13,-0.97,-1.05,11.29,-0.59,"",""],
+["혼합","혼합","혼합","기타","329670","KODEX TRF7030","글로벌 선진국 주식 70% + 국내채권 30%","월중",839,828,{"25-12":35,"26-1":32,"26-2":32,"26-3":31},32,0.15,1.77,1.79,21245,21490,21045,-2.07,0.43,-1.92,-0.94,16.00,-0.49,"",""],
+["채권","채권","미국","채권","332610","PLUS 미국단기회사채(AAA~A)","미국 단기 우량회사채","월말",152,132,{"25-12":406,"26-1":402,"26-2":397,"26-3":382},394,0.28,3.33,3.58,131825,130985,137820,5.22,0.78,5.50,4.55,3.32,5.44,"",""],
+["채권","채권","미국","채권","332620","PLUS 미국장기우량회사채","미국 장기 우량회사채","월말",224,205,{"25-12":351,"26-1":385,"26-2":348,"26-3":346},360,0.35,4.19,4.44,97315,98130,99095,0.98,1.55,1.33,1.83,5.11,2.94,"",""],
+["채권","채권","국내","채권","336160","RISE 금융채액티브","국내 중단기 금융채","월말",424,416,{"25-12":242,"26-1":320,"26-2":215,"26-3":227},254,0.23,2.71,2.98,102290,101835,100585,-1.23,-0.20,-1.00,-1.67,2.75,-0.92,"",""],
+["혼합","혼합","국내","기타","341850","TIGER 리츠부동산인프라채권","국내 부동산 + 인프라 + 채권","월말",101,100,{"25-12":24,"26-1":24,"26-2":24,"26-3":24},24,0.48,5.81,5.88,4900,5040,4960,-1.59,2.40,-1.10,1.22,12.81,2.69,"명칭 변경: TR KIS → KIS",""],
+["리츠","리츠","일본","리츠","352540","KODEX 일본부동산리츠(H)","일본 리츠 + 환헤지","월말",572,551,{"25-12":63,"26-1":60,"26-2":63,"26-3":64},62,0.54,6.51,5.83,12825,12890,11795,-8.49,2.79,-7.95,-8.03,27.47,-6.57,"2024/04/19 명칭 변경",""],
+["리츠","리츠","미국","리츠","352560","KODEX 미국부동산리츠(H)","미국 리츠 + 환헤지","월말",324,326,{"25-12":33,"26-1":33,"26-2":33,"26-3":32},33,0.28,3.39,3.41,11485,12310,11325,-8.00,5.30,-7.72,-1.39,2.04,-0.54,"2024/04/19 명칭 변경",""],
+["주식","배당","미국","해외배당","373790","KIWOOM 미국방어배당성장나스닥","10년 이상 배당성장 + 미국 대형 방어주","월말",47,47,{"25-12":25,"26-1":25,"26-2":24,"26-3":25},25,0.15,1.80,1.89,15640,16930,16700,-1.36,7.43,-1.21,6.78,5.93,7.25,"(기존)분기→2024/07부터 월분배","2025/01/14 명칭 변경"],
+["주식","배당","미국","해외배당","402970","ACE 미국배당다우존스","SCHD","월중",7520,8006,{"25-12":53,"26-1":39,"26-2":24,"26-3":46},36,0.31,3.69,3.38,12900,14590,14960,2.54,8.56,2.84,15.97,2.39,16.81,"분배 지급기준일 30일→15일",""],
+["채권","금리형","국내","금리","423160","KODEX KOFR금리액티브(합성)","한국예탁결제원 산출 KOFR + 액티브","월말",44142,44524,{"25-12":229,"26-1":252,"26-2":248,"26-3":221},240,0.20,2.40,2.61,110685,110845,110640,-0.18,0.20,0.01,-0.04,2.88,0.61,"",""],
+["주식","배당","미국","해외배당","429000","TIGER 미국S&P500배당귀족","25년 연속 배당성장 (NOBL)","월말",1505,1562,{"25-12":25,"26-1":16,"26-2":24,"26-3":27},22,0.20,2.41,2.09,12815,13835,13445,-2.82,4.90,-2.62,4.92,5.63,5.44,"",""],
+["리츠","리츠","국내","리츠","429740","PLUS K리츠","국내 상장 리츠","월말",94,93,{"25-12":40,"26-1":40,"26-2":30,"26-3":30},33,0.42,5.09,5.66,7070,7210,7075,-1.87,1.26,-1.45,0.07,16.85,1.49,"2024/02/28부터 월분배전환",""],
+["주식","시장지수","미국","미국대표지수","432840","HANARO 미국S&P500","S&P500","월말",147,146,{"25-12":15,"26-1":9,"26-2":10,"26-3":11},10,0.06,0.73,0.65,18505,18385,18025,-1.96,-1.07,-1.90,-2.59,15.91,-2.43,"2023/08/30부터 월분배",""],
+["주식","시장지수","미국","미국대표지수","433330","SOL 미국S&P500","S&P500","월말",2212,2693,{"25-12":19,"26-1":12,"26-2":14,"26-3":21},16,0.10,1.26,0.91,20580,20445,20045,-1.96,-1.02,-1.85,-2.60,16.01,-2.37,"",""],
+["채권","채권","혼합","기타","437070","Kodex 아시아달러채권ESG플러스액티브","달러표시 ESG 트렌드 부합 아시아 채권","월말",403,415,{"25-12":233,"26-1":239,"26-2":237,"26-3":219},232,0.33,3.99,4.38,63500,63510,65805,3.61,1.44,3.95,3.63,6.02,4.72,"",""],
+["채권","채권","미국","채권","437080","KODEX 미국종합채권ESG액티브(H)","미국 채권시장 종합 분산투자(BND)","월말",3555,3243,{"25-12":362,"26-1":372,"26-2":357,"26-3":328},352,0.33,3.98,4.19,101015,101725,98985,-2.69,0.89,-2.36,-2.01,5.01,-0.96,"(기존)미지급→2025/02/07부터 월분배",""],
+["혼합","혼합","혼합","기타","440340","TIGER 글로벌멀티에셋TIF액티브","글로벌 국채 + 배당주 + 리츠","월말",191,205,{"25-12":35,"26-1":35,"26-2":40,"26-3":42},39,0.34,4.02,3.94,11870,12245,12525,2.29,2.75,2.62,5.52,6.37,6.50,"",""],
+["주식","커버드콜","미국","미배커","441640","KODEX 미국배당커버드콜액티브","미국 배당성장 + 커버드콜","월중",13867,14495,{"25-12":98,"26-1":98,"26-2":99,"26-3":99},99,0.78,9.41,9.40,12595,12730,12630,-0.79,1.97,0.00,0.28,15.41,2.63,"분배 지급기준일 30일→15일",""],
+["주식","커버드콜","미국","나스닥커","441680","TIGER 미국나스닥100커버드콜(합성)","나스닥100 + 나스닥100 커버드콜","월말",3541,3491,{"25-12":112,"26-1":112,"26-2":110,"26-3":113},112,1.04,12.45,12.22,10965,10890,10895,0.05,-0.84,1.08,-0.64,7.27,2.42,"",""],
+["주식","배당","국내","국내배당","441800","TIME Korea플러스배당액티브","국내 고배당","월말",7496,6822,{"25-12":294,"26-1":117,"26-2":148,"26-3":267},177,1.04,12.53,10.52,20230,30065,25575,-14.93,26.39,-13.89,26.42,63.16,29.05,"",""],
+["주식","배당","미국","해외배당","446720","SOL 미국배당다우존스","SCHD","월말",8894,9285,{"25-12":37,"26-1":30,"26-2":35,"26-3":33},33,0.25,2.94,3.36,11655,13195,13450,1.93,8.33,2.18,15.40,3.27,16.24,"",""],
+["주식","시장지수","국내","코리아","448100","WON 200","KOSPI 200","월말",1073,960,{"25-12":60,"26-1":60,"26-2":60,"26-3":60},60,0.07,0.89,1.12,64490,93635,80860,-13.64,19.43,-13.57,25.38,90.08,25.66,"2023/05/30부터 월분배",""],
+["혼합","혼합","국내","기타","448330","KODEX 삼성전자채권혼합","삼성전자 주식 30% + 국채 70%","월중",8814,10967,{"25-12":22,"26-1":25,"26-2":28,"26-3":28},27,0.19,2.25,2.37,13650,15710,14945,-4.87,7.63,-4.68,9.49,29.07,10.08,"2024/10/11 월분배 전환 공지",""],
+["주식","배당","미국","해외배당","452360","SOL 미국배당다우존스(H)","SCHD + 환헤지","월말",2067,2011,{"25-12":34,"26-1":28,"26-2":33,"26-3":30},30,0.25,2.99,3.32,10980,12550,12055,-3.94,7.80,-3.70,9.79,1.60,10.62,"2023/03/21 신규상장",""],
+["주식","시장지수","미국","미국대표지수","453330","RISE 미국S&P500(H)","S&P500 + 환헤지","월말",916,851,{"25-12":16,"26-1":15,"26-2":16,"26-3":15},15,0.10,1.19,1.12,16405,16400,15140,-7.68,-1.64,-7.58,-7.71,15.54,-7.43,"2023/03/21 신규상장",""],
+["채권","채권","미국","채권","453850","ACE 미국30년국채액티브(H)","미국 30년 국채 (듀레이션 17.3년)","월말",19835,17626,{"25-12":24,"26-1":23,"26-2":23,"26-3":20},22,0.27,3.19,3.47,7600,7805,7520,-3.65,2.32,-3.39,-1.05,2.16,-0.18,"2023/03/14 상장",""],
+["채권","금리형","미국","금리","455030","Kodex 미국달러SOFR금리액티브(합성)","미국 달러 + SOFR 금리 수익","월말",6289,6581,{"25-12":38,"26-1":46,"26-2":37,"26-3":34},39,0.26,3.14,3.78,12390,12300,12990,5.61,0.67,5.87,4.84,2.77,5.79,"",""],
+["채권","채권","미국","채권","455660","ACE 미국하이일드액티브(H)","미국 하이일드 채권","월말",515,552,{"25-12":53,"26-1":54,"26-2":53,"26-3":50},52,0.53,6.35,6.41,9790,9780,9450,-3.37,-0.17,-2.85,-3.47,5.35,-1.87,"2023/04/18 신규상장",""],
+["채권","채권","미국","채권","458260","TIGER 미국투자등급회사채액티브(H)","미국 우량 회사채(잔존만기 3년+)","월말",2971,2807,{"25-12":180,"26-1":170,"26-2":196,"26-3":224},197,0.47,5.68,4.86,48590,49080,47290,-3.65,0.89,-3.17,-2.68,5.77,-1.46,"2023/05/31 신규상장",""],
+["주식","배당","미국","해외배당","458730","TIGER 미국배당다우존스","SCHD","월말",29277,31851,{"25-12":40,"26-1":32,"26-2":38,"26-3":36},35,0.24,2.94,3.34,12705,14390,14700,2.15,8.30,2.40,15.70,2.87,16.54,"2023/06/20 신규상장",""],
+["주식","커버드콜","미국","미배커","458750","TIGER 미국배당다우존스타겟커버드콜1호","SCHD + S&P500 ATM 콜옵션 매도 15%","월중",620,604,{"25-12":73,"26-1":58,"26-2":62,"26-3":74},65,0.56,6.78,6.88,11285,12740,13100,2.83,8.54,3.39,16.08,0.42,17.80,"2023/06/20 신규상장","분배 지급기준일 30일→15일"],
+["주식","커버드콜","미국","미배커","458760","TIGER 미국배당다우존스타겟커버드콜2호","SCHD + S&P500 ATM 콜옵션 매도 40%","월말",7591,7548,{"25-12":88,"26-1":88,"26-2":94,"26-3":94},92,0.83,9.96,11.29,9780,11125,11325,1.80,9.12,2.63,15.80,0.43,18.62,"2023/06/20 신규상장",""],
+["채권","금리형","국내","금리","459580","KODEX CD금리액티브(합성)","CD 91일물 금리 + 액티브","월말",80199,81437,{"25-12":2461,"26-1":2572,"26-2":2616,"26-3":2308},2499,0.22,2.58,2.79,1073875,1075515,1073305,-0.21,0.21,0.01,-0.05,2.90,0.64,"",""],
+["주식","배당","미국","해외배당","460660","RISE 미국S&P배당킹","50년 연속 배당성장","월말",242,195,{"25-12":28,"26-1":28,"26-2":30,"26-3":29},29,0.25,2.96,3.13,11135,12210,11770,-3.60,6.70,-3.36,5.70,4.16,6.48,"2023/06/27 신규상장",""],
+["혼합","혼합","미국","기타","460960","ACE 글로벌인컴TOP10","미국 글로벌 배당 10개(주식+채권)","월말",868,859,{"25-12":113,"26-1":64,"26-2":64,"26-3":71},66,0.61,7.34,6.89,11555,11655,11615,-0.34,0.29,0.27,0.52,11.21,2.24,"2023/07/11 신규상장",""],
+["채권","채권","미국","채권","464470","PLUS 미국채30년액티브","만기 20년 이상 미국 국고채","월말",541,475,{"25-12":108,"26-1":107,"26-2":108,"26-3":108},108,0.20,2.37,2.46,52595,53860,54730,1.62,3.13,1.81,4.06,2.47,4.67,"",""],
+["주식","배당","미국","해외배당","465670","TIGER 미국캐시카우100","잉여현금흐름 높은 미국상장 100개","월말",131,128,{"25-12":35,"26-1":16,"26-2":21,"26-3":12},16,0.08,0.97,1.35,14530,14540,14900,2.48,0.42,2.56,2.55,15.22,2.88,"2023/09/19 신규상장",""],
+["주식","배당","국내","국내배당","466940","TIGER 은행고배당플러스TOP10","국내 고배당 은행주 10개","월말",9618,9901,{"25-12":72,"26-1":73,"26-2":87,"26-3":87},82,0.35,4.24,4.66,21215,28530,24610,-13.74,25.05,-13.39,16.00,65.60,17.17,"2023/10/17 신규상장",""],
+["채권","채권","미국","채권","468370","KODEX iShares미국인플레이션국채액티브","미국 물가연동 채권(듀레이션 6.53년)","월말",180,186,{"25-12":32,"26-1":31,"26-2":31,"26-3":31},31,0.26,3.12,3.27,11375,11385,11935,4.83,1.16,5.09,4.92,4.87,5.74,"",""],
+["채권","채권","미국","채권","468380","KODEX iShares미국하이일드액티브","미국 하이일드 채권(듀레이션 3.32년)","월말",1130,1090,{"25-12":68,"26-1":73,"26-2":64,"26-3":59},65,0.50,5.97,6.73,11655,11580,11865,2.46,0.42,2.96,1.80,6.66,3.48,"2023/10/19 신규상장",""],
+["채권","채권","미국","채권","468630","KODEX iShares미국투자등급회사채액티브","미국 투자등급 회사채(LQD)","월말",356,363,{"25-12":39,"26-1":49,"26-2":40,"26-3":39},43,0.32,3.88,4.36,11750,11810,12075,2.24,1.54,2.57,2.77,6.13,3.86,"2023/10/19 신규상장",""],
+["채권","채권","국내","채권","471460","KIWOOM 국고채30년액티브","만기 30년 국내 초장기 국고채","월말",335,270,{"25-12":109,"26-1":109,"26-2":109,"26-3":127},115,0.24,2.93,2.39,57720,54940,51935,-5.47,-1.21,-5.23,-10.02,-8.18,-9.42,"(기존)분기→2024/07부터 월분배","2025/01/14 명칭 변경"],
+["주식","커버드콜","국내","국배커","472150","TIGER 배당커버드콜액티브","KOSPI200 배당성장 + OTM 콜옵션 매도","월말",8718,8718,{"25-12":270,"26-1":320,"26-2":375,"26-3":350},348,2.17,26.01,30.12,13880,18985,16150,-14.93,16.58,-12.77,16.35,63.06,23.88,"2023/12/12 신규상장",""],
+["채권","커버드콜","미국","미채커","472830","RISE 미국30년국채커버드콜(합성)","미국 30년 국채(TLTW)","월말",596,602,{"25-12":80,"26-1":80,"26-2":72,"26-3":70},74,0.76,9.07,9.81,9050,9170,9260,0.98,2.90,1.74,2.32,7.19,4.77,"2023/12/14 신규상장","2024/04/03 명칭 변경"],
+["채권","채권","혼합","채권","472870","RISE 미국30년국채엔화노출(합성 H)","미국 30년 국채 + 원화/엔화 환노출","월말",3535,3257,{"25-12":21,"26-1":20,"26-2":20,"26-3":20},20,0.25,3.01,3.03,7915,8115,7965,-1.85,0.99,-1.60,0.63,-1.95,1.39,"",""],
+["채권","커버드콜","미국","미채커","473330","SOL 미국30년국채커버드콜(합성)","미국 20년 이상 만기 국채 + 커버드콜","월말",3808,3669,{"25-12":115,"26-1":75,"26-2":75,"26-3":77},76,0.83,9.93,9.98,9100,9270,9305,0.38,3.18,1.21,2.25,7.99,4.75,"2023/12/27 신규상장",""],
+["주식","커버드콜","미국","테크커","474220","TIGER 미국테크TOP10타겟커버드콜","미국테크 TOP10 + 나스닥 ATM 콜옵션 매도 40%","월중",4943,4777,{"25-12":136,"26-1":134,"26-2":129,"26-3":126},130,0.88,10.60,9.77,15930,14700,14270,-2.93,-4.89,-2.04,-10.42,16.90,-7.98,"2024/01/16 신규상장",""],
+["혼합","혼합","혼합","기타","475080","KODEX 테슬라커버드콜채권혼합액티브","테슬라 커버드콜 + 국내 종합채권","월말",3432,3432,{"25-12":116,"26-1":112,"26-2":108,"26-3":108},109,1.28,15.34,14.47,9065,8725,8450,-3.15,-1.44,-1.87,-6.78,8.16,-3.17,"2024/01/23 신규상장",""],
+["리츠","리츠","혼합","리츠","475380","RISE 글로벌리얼티인컴","리얼티인컴 + 맥쿼리인프라 + 리츠","월말",326,309,{"25-12":34,"26-1":31,"26-2":31,"26-3":33},32,0.30,3.61,3.71,10245,11225,10975,-2.23,7.69,-1.93,7.13,3.01,8.05,"2024/02/20 신규상장",""],
+["주식","커버드콜","국내","코스피커","475720","RISE 200위클리커버드콜","KOSPI 200 + ATM 위클리 커버드콜","월말",8902,7445,{"25-12":160,"26-1":180,"26-2":200,"26-3":210},197,1.81,21.67,21.47,10990,13830,11630,-15.91,11.87,-14.10,5.82,51.58,11.19,"2024/03/05 신규상장",""],
+["채권","커버드콜","미국","미채커","476550","TIGER 미국30년국채커버드콜액티브(H)","미국 장기채 + ATM 위클리 커버드콜(30%이내)","월말",11916,10756,{"25-12":77,"26-1":77,"26-2":77,"26-3":75},76,1.02,12.29,12.08,7580,7740,7325,-5.36,2.17,-4.34,-3.36,3.30,-0.34,"2024/02/27 신규상장",""],
+["주식","테마","혼합","기타","476690","TIGER 글로벌비만치료제TOP2Plus","글로벌 비만 치료제 관련 TOP2 + 8종목","월말",509,438,{"25-12":12,"26-1":12,"26-2":12,"26-3":33},19,0.34,4.04,2.18,10465,10360,9805,-5.36,-6.30,-5.02,-6.31,10.36,-5.76,"2024/02/29 신규상장",""],
+["채권","채권","혼합","채권","476750","ACE 미국30년국채엔화노출액티브(H)","미국 30년 국채 + 원화/엔화 환노출","월말",848,848,{"25-12":22,"26-1":21,"26-2":18,"26-3":18},19,0.21,2.51,2.68,8495,8670,8615,-0.63,0.61,-0.43,1.41,-1.65,2.08,"2024/03/12 신규상장",""],
+["채권","채권","미국","채권","476760","ACE 미국30년국채액티브","미국 30년 국채","월말",3203,2993,{"25-12":34,"26-1":31,"26-2":31,"26-3":30},31,0.29,3.52,3.74,9845,10050,10240,1.89,3.02,2.18,4.01,2.45,4.95,"2024/03/12 신규상장",""],
+["리츠","리츠","국내","리츠","476800","KODEX 한국부동산리츠인프라","맥쿼리인프라(25%) + 국내 리츠","월중",5876,5746,{"25-12":29,"26-1":29,"26-2":29,"26-3":29},29,0.60,7.21,7.10,4900,4930,4825,-2.13,1.72,-1.53,-1.53,14.45,0.24,"2024/03/05 신규상장",""],
+["주식","커버드콜","미국","테크커","480020","ACE 미국빅테크7+데일리타겟커버드콜(합성)","미국 빅테크 시총 상위 7개 + QQQ OTM 1% 콜옵션","월중",1691,1691,{"25-12":166,"26-1":163,"26-2":154,"26-3":151},156,1.33,15.98,14.67,12765,11870,11340,-4.47,-5.39,-3.13,-11.16,15.34,-7.50,"2024/04/23 신규상장",""],
+["주식","커버드콜","미국","S&P500커","480030","ACE 미국500데일리타겟커버드콜(합성)","미국 우량주 500 + SPY OTM 0.7% 콜옵션","월중",1550,1516,{"25-12":137,"26-1":139,"26-2":134,"26-3":134},136,1.29,15.48,15.14,10750,10350,10385,0.34,-1.61,1.63,-3.40,10.82,0.39,"2024/04/23 신규상장","분배락일 변경"],
+["주식","커버드콜","미국","테크커","480040","ACE 미국반도체데일리타겟커버드콜(합성)","미국 반도체 시총 상위 30개 + QQQ OTM 1% 콜옵션","월중",1065,1052,{"25-12":163,"26-1":168,"26-2":176,"26-3":167},170,1.23,14.81,16.55,12350,14210,13535,-4.75,3.14,-3.52,9.60,34.50,13.73,"2024/04/23 신규상장","분배락일 변경"],
+["주식","리츠","국내","리츠","480460","WON 한국부동산TOP3플러스","국내 상장 리츠 10종목 + 인프라 펀드","월말",104,104,{"25-12":50,"26-1":50,"26-2":50,"26-3":50},50,0.48,5.81,5.90,10170,10500,10325,-1.67,2.67,-1.18,1.52,12.67,3.00,"2024/04/30 신규상장",""],
+["채권","금리형","국내","금리","481050","KODEX CD1년금리플러스액티브(합성)","1년CD + KOSPI200 1%↑ 시 0.5% 추가","월말",30347,27780,{"25-12":2477,"26-1":2549,"26-2":2541,"26-3":2218},2436,0.22,2.61,2.86,1021975,1023545,1021420,-0.21,0.21,0.01,-0.05,2.90,0.66,"2024/12/27부터 월분배",""],
+["채권","커버드콜","미국","미채커","481060","KODEX 미국30년국채타겟커버드콜(합성 H)","미국 30년 국채 + 위클리 콜옵션 매도","월중",9205,8739,{"25-12":83,"26-1":83,"26-2":83,"26-3":82},83,1.03,12.33,11.94,8310,8330,7980,-4.20,1.54,-3.17,-3.97,2.00,-0.99,"2024/04/30 신규상장","분배 지급기준일 30일→15일"],
+["채권","채권","미국","채권","481340","RISE 미국30년국채액티브","미국 30년 국채(듀레이션 21.1년)","월말",307,273,{"25-12":38,"26-1":37,"26-2":37,"26-3":37},37,0.37,4.46,4.58,9700,9945,9965,0.20,3.48,0.57,2.73,2.62,3.88,"2024/05/28 신규상장",""],
+["주식","커버드콜","미국","S&P500커","482730","TIGER 미국S&P500타겟데일리커버드콜","S&P500 90% + 데일리 콜옵션 매도 10%","월말",5316,5250,{"25-12":99,"26-1":100,"26-2":97,"26-3":97},98,0.86,10.35,10.00,11765,11595,11245,-3.02,-1.03,-2.16,-4.42,15.03,-1.92,"2024/05/28 신규상장",""],
+["주식","커버드콜","미국","테크커","483280","KODEX 미국AI테크TOP10타겟커버드콜","미국 AI 주식 10종목 75% + 나스닥 위클리 콜옵션 25%","월말",5601,5260,{"25-12":163,"26-1":159,"26-2":149,"26-3":148},152,1.33,16.00,14.38,12685,11870,11100,-6.49,-5.65,-5.15,-12.50,24.32,-8.90,"2024/05/28 신규상장",""],
+["주식","커버드콜","미국","미배커","483290","KODEX 미국배당다우존스타겟커버드콜","SCHD + S&P500 콜옵션 매도 비중 조절","월말",1501,1569,{"25-12":96,"26-1":98,"26-2":106,"26-3":108},104,0.99,11.93,13.33,9360,10610,10860,2.36,9.32,3.35,16.03,-1.23,19.36,"2024/05/28 신규상장",""],
+["채권","채권","미국","채권","484790","KODEX 미국30년국채액티브(H)","미국 30년 국채 + 환헤지(듀레이션 16.63년)","월말",6581,5871,{"25-12":36,"26-1":37,"26-2":36,"26-3":32},35,0.37,4.44,4.76,8815,9055,8650,-4.47,2.43,-4.10,-1.87,2.98,-0.68,"2024/06/18 신규상장",""],
+["주식","배당","국내","국내배당","484880","SOL 금융지주플러스고배당","국내 고배당 금융지주 10개","월말",3958,3922,{"25-12":44,"26-1":45,"26-2":50,"26-3":66},54,0.32,3.86,3.74,17225,23760,20530,-13.59,26.16,-13.27,19.19,68.65,20.12,"2024/06/25 신규상장",""],
+["주식","커버드콜","미국","나스닥커","486290","TIGER 미국나스닥100타겟데일리커버드콜","나스닥100 90% + 데일리 콜옵션 매도(10%)","월말",11701,12061,{"25-12":136,"26-1":134,"26-2":127,"26-3":128},130,1.31,15.69,14.72,10570,10175,9790,-3.78,-3.57,-2.48,-7.38,18.30,-3.70,"2024/06/25 신규상장",""],
+["주식","배당","기타","해외배당","487950","KODEX 대만테크고배당다우존스","대만 IT/커뮤니케이션 고배당 30개","월말",138,152,{"25-12":58,"26-1":63,"26-2":60,"26-3":65},63,0.59,7.14,7.56,9950,10700,10925,2.10,0.10,2.70,9.80,9.77,11.69,"2024/07/23 신규상장",""],
+["주식","커버드콜","국내","국배커","489030","PLUS 고배당주위클리커버드콜","KOSPI 고배당 + KOSPI 200 ATM 콜옵션 매도","월말",2130,2536,{"25-12":135,"26-1":136,"26-2":156,"26-3":135},142,1.57,18.83,19.70,8670,10150,8605,-15.22,14.69,-13.65,-0.75,14.59,4.18,"2024/08/13 신규상장",""],
+["주식","배당","미국","해외배당","489250","KODEX 미국배당다우존스","SCHD","월중",4354,4706,{"25-12":33,"26-1":34,"26-2":28,"26-3":32},31,0.25,3.03,3.44,10925,12350,12670,2.59,8.56,2.84,15.97,2.35,16.83,"2024/08/13 신규상장","배당 지급기준일 매월 15일"],
+["혼합","혼합","미국","기타","490490","SOL 미국배당미국채혼합50","SCHD 50% + 미국채 10년 50%","월중",3792,4125,{"25-12":30,"26-1":31,"26-2":24,"26-3":30},28,0.26,3.11,3.20,10615,11305,11570,2.34,5.87,2.60,9.00,3.94,9.80,"2024/09/24 신규상장",""],
+["주식","커버드콜","미국","테크커","490590","RISE 미국AI밸류체인데일리고정커버드콜","미국 AI밸류체인 핵심 15개 90% + 데일리 콜옵션 10% 고정","월말",4792,4453,{"25-12":186,"26-1":168,"26-2":152,"26-3":199},173,1.65,19.84,15.97,13000,12460,12035,-3.41,-5.45,-1.76,-7.42,38.31,-3.43,"2024/10/2 상장",""],
+["주식","커버드콜","미국","미배커","490600","RISE 미국배당100데일리고정커버드콜","미국 배당성장 100개 90% + S&P500 데일리 커버드콜 10%","월중",1083,1107,{"25-12":115,"26-1":99,"26-2":103,"26-3":142},115,1.51,18.11,15.88,8665,9380,9410,0.32,6.02,1.83,8.60,2.58,12.57,"2026/04 분배 월말→월중 변경",""],
+["주식","커버드콜","미국","나스닥커","491620","RISE 미국테크100데일리고정커버드콜","미국 테크 100 90% + 데일리 콜옵션 10% 고정","월말",3189,3189,{"25-12":158,"26-1":137,"26-2":126,"26-3":160},141,1.62,19.46,15.54,10885,10355,9865,-4.73,-4.95,-3.11,-9.37,20.63,-5.48,"2024/10/2 상장",""],
+["주식","배당","미국","해외배당","493420","SOL 미국배당다우존스2호","SCHD","월중",314,325,{"25-12":45,"26-1":26,"26-2":27,"26-3":35},29,0.28,3.37,3.27,10765,12150,12460,2.55,8.37,2.83,15.75,1.61,16.56,"2024/10/08 신규상장",""],
+["주식","커버드콜","미국","테크커","493810","TIGER 미국AI빅테크10타겟데일리커버드콜","미국 AI빅테크 10종목 90% + 데일리 옵션 커버드콜 10%","월중",2527,2527,{"25-12":157,"26-1":154,"26-2":148,"26-3":143},148,1.34,16.05,14.74,12080,11345,10690,-5.77,-3.84,-4.44,-11.51,20.44,-7.82,"2024/10/15 상장",""],
+["주식","커버드콜","미국","S&P500커","494210","SOL 미국500타겟데일리커버드콜액티브","미국 대형주 500 + 데일리 옵션 커버드콜 + 액티브","월말",85,85,{"25-12":112,"26-1":111,"26-2":108,"26-3":107},109,1.04,12.45,11.95,10915,10745,10310,-4.05,-1.00,-3.01,-5.54,14.70,-2.56,"2024/10/15 상장",""],
+["주식","커버드콜","미국","나스닥커","494300","KODEX 미국나스닥100데일리커버드콜OTM","미국 나스닥100 + 데일리 커버드콜(1% OTM)","월말",6686,6686,{"25-12":172,"26-1":167,"26-2":161,"26-3":164},164,1.73,20.79,19.66,10010,9770,9465,-3.12,-1.86,-1.39,-5.44,15.24,-0.53,"2024/10/22 상장",""],
+["주식","커버드콜","미국","미배커","494420","PLUS 미국배당증가성장주데일리커버드콜","미국 고배당 성장주 + 데일리 옵션 커버드콜(15% 고정)","월중",169,169,{"25-12":115,"26-1":100,"26-2":100,"26-3":100},100,1.08,12.90,12.44,9645,9460,9300,-1.69,0.22,-0.62,-3.58,9.81,-0.47,"2024/10/22 상장",""],
+["주식","시장지수","국내","코리아","495040","PLUS 코리아밸류업","코리아 밸류업 지수 100개","월중",613,613,{"25-12":20,"26-1":20,"26-2":20,"26-3":20},20,0.09,1.03,1.33,18080,26535,23200,-12.57,20.14,-12.48,28.32,84.37,28.65,"2024/11/04 신규상장",""],
+["주식","시장지수","국내","코리아","495050","RISE 코리아밸류업","코리아 밸류업 지수 100개","월중",6689,8402,{"25-12":30,"26-1":20,"26-2":20,"26-3":20},20,0.09,1.03,1.32,18240,26740,23370,-12.60,19.72,-12.52,28.13,85.11,28.45,"2024/11/04 신규상장",""],
+["주식","시장지수","국내","코리아","495230","KoAct 코리아밸류업액티브","코리아 밸류업 + 액티브 전략","월말",2060,2337,{"25-12":34,"26-1":44,"26-2":53,"26-3":49},49,0.21,2.48,3.14,18605,27180,23690,-12.84,19.51,-12.63,27.33,84.26,28.12,"2024/11/04 신규상장",""],
+["주식","시장지수","국내","코리아","495330","1Q 코리아밸류업","코리아 밸류업 지수 100개","월말",1000,1018,{"25-12":0,"26-1":10,"26-2":17,"26-3":81},36,0.35,4.19,2.38,18140,26670,23225,-12.92,20.20,-12.57,28.03,86.40,28.63,"2024/11/04 신규상장","'25.12 미지급, 차월 이월"],
+["주식","시장지수","국내","코리아","495850","KODEX 코리아밸류업","코리아 밸류업 지수 100개","월말",6880,6147,{"25-12":25,"26-1":84,"26-2":25,"26-3":20},43,0.09,1.03,2.83,18225,26640,23375,-12.26,19.42,-12.17,28.26,85.68,28.97,"2024/11/04 신규상장",""],
+["주식","시장지수","국내","코리아","496080","TIGER 코리아밸류업","코리아 밸류업 지수 100개","월말",4484,4135,{"25-12":20,"26-1":24,"26-2":28,"26-3":28},27,0.12,1.44,1.76,18210,26690,23310,-12.66,19.87,-12.54,28.01,85.65,28.45,"2024/11/04 신규상장",""],
+["주식","테마","미국","기타","497780","KoAct 미국천연가스인프라액티브","미국 천연가스 밸류체인","월말",210,304,{"25-12":38,"26-1":40,"26-2":44,"26-3":49},44,0.39,4.69,5.62,9465,10960,12530,14.32,10.00,14.72,32.38,-1.59,33.79,"2024/12/10 신규상장",""],
+["채권","금리형","국내","금리","497880","SOL CD금리&머니마켓액티브","CD 50% + 채권 25% + 기업어음/CP 15% + Call 10%","월말",1879,2104,{"25-12":130,"26-1":145,"26-2":120,"26-3":130},132,0.26,3.12,3.16,50045,50120,50010,-0.22,0.19,0.04,-0.07,3.27,0.72,"2024/11/26 신규상장",""],
+["주식","커버드콜","국내","코스피커","498400","KODEX 200타겟위클리커버드콜","KOSPI200 + 위클리 콜옵션 매도 (연 15% 분배 목표)","월중",35178,35661,{"25-12":196,"26-1":213,"26-2":244,"26-3":252},236,1.53,18.41,20.19,14050,19170,16425,-14.32,17.42,-12.79,16.90,59.88,21.95,"2024/12/03 신규상장",""],
+["주식","커버드콜","국내","국배커","498410","KODEX 금융고배당TOP10타겟위클리커버드콜","KOSPI200 금융 고배당 TOP10 + 위클리 콜옵션 매도","월말",6332,6697,{"25-12":152,"26-1":155,"26-2":189,"26-3":162},169,1.29,15.50,17.23,11750,14690,12545,-14.60,19.47,-13.31,6.77,42.73,11.07,"2024/12/17 신규상장",""],
+["주식","배당","국내","국내배당","498860","RISE 코리아금융고배당","금융지주·은행·증권·보험 ROE/PBR/시총 종합","월중",560,562,{"25-12":60,"26-1":55,"26-2":50,"26-3":50},52,0.26,3.18,4.12,15040,22165,18875,-14.84,31.77,-14.58,25.50,67.69,26.53,"2024/12/10 신규상장",""],
+["주식","시장지수","혼합","미국대표지수","499150","SOL 미국S&P500엔화노출(H)","S&P500 + 엔화 투자","월말",84,81,{"25-12":10,"26-1":10,"26-2":10,"26-3":10},10,0.10,1.20,1.13,10600,10495,10030,-4.43,-3.53,-4.33,-5.38,11.99,-5.09,"2024/12/03 신규상장",""],
+["채권","금리형","국내","금리","499660","TIGER CD금리플러스액티브(합성)","CD91일물 + CPI 상승 시 0.1% 추가","월말",4432,4340,{"25-12":2580,"26-1":2260,"26-2":2140,"26-3":2590},2330,0.26,3.11,2.79,1000450,1002150,999995,-0.22,0.20,0.04,-0.05,2.95,0.65,"2024/12/17 신규상장",""],
+["주식","커버드콜","미국","미개커","0000D0","TIGER 엔비디아미국채커버드콜밸런스(합성)","엔비디아 30% + 미국30년국채커버드콜 70%","월말",609,614,{"25-12":101,"26-1":99,"26-2":100,"26-3":100},100,1.01,12.12,11.92,10030,10015,9900,-1.15,0.50,-0.14,-1.30,11.99,1.68,"2024/12/17 신규상장",""],
+["주식","배당","미국","해외배당","0004G0","1Q 미국배당TOP30","미국 우량 배당성장주 30개","월말",96,103,{"25-12":23,"26-1":34,"26-2":30,"26-3":20},28,0.21,2.57,3.75,8955,9640,9340,-3.11,5.49,-2.90,4.30,-7.24,5.24,"2025/01/26 신규상장",""],
+["주식","커버드콜","미국","S&P500커","0005A0","KODEX 미국S&P500데일리커버드콜OTM","S&P500 + 1% OTM 데일리 콜옵션 매도","월말",1461,1488,{"25-12":125,"26-1":123,"26-2":119,"26-3":121},121,1.25,15.03,14.85,9775,9585,9660,0.78,-0.85,2.04,-1.18,14.89,2.54,"2025/01/07 신규상장",""],
+["주식","커버드콜","미국","미배커","0008S0","TIGER 미국배당다우존스타겟데일리커버드콜","SCHD + S&P500 ATM 데일리 콜옵션 매도 10%","월중",1799,1961,{"25-12":91,"26-1":95,"26-2":102,"26-3":101},99,0.99,11.84,13.21,9025,10045,10240,1.94,8.51,2.93,13.46,1.15,16.76,"2025/01/21 신규상장",""],
+["주식","배당","미국","해외배당","0013P0","RISE 미국은행TOP10","주요 미국 은행주 10개","월말",151,149,{"25-12":22,"26-1":22,"26-2":21,"26-3":17},20,0.15,1.79,1.97,12210,11430,11425,-0.04,-2.62,0.11,-6.43,25.57,-5.94,"2025/02/18 신규상장",""],
+["혼합","커버드콜","미국","미개커","0013R0","RISE 테슬라미국채타겟커버드콜혼합(합성)","테슬라 30% + 미국30년 국채 70% + 옵션 매도 비중 조절","월말",356,361,{"25-12":110,"26-1":125,"26-2":120,"26-3":106},117,1.12,13.40,14.28,9830,9545,9495,-0.52,0.74,0.59,-3.41,13.68,0.16,"2025/02/18 신규상장",""],
+["혼합","혼합","미국","기타","0015E0","KIWOOM 엔비디아미국30년국채혼합액티브(H)","엔비디아 30% + 미국30년 국채 70%","월말",65,52,{"25-12":20,"26-1":20,"26-2":20,"26-3":20},20,0.19,2.32,2.26,10620,10865,10340,-4.83,1.92,-4.64,-2.64,9.48,-2.07,"2025/02/12 신규상장",""],
+["혼합","혼합","미국","기타","0015F0","KIWOOM 팔란티어미국30년국채혼합액티브(H)","팔란티어 30% + 미국30년 국채 70%","월말",199,186,{"25-12":20,"26-1":20,"26-2":20,"26-3":20},20,0.19,2.32,2.20,10925,10285,10330,0.44,-3.50,0.63,-5.45,13.22,-4.90,"2025/02/12 신규상장",""],
+["주식","커버드콜","국내","국배커","0018C0","PLUS 고배당주위클리고정커버드콜","PLUS 고배당주 + KOSPI 200 콜옵션 매도(연 15% 목표)","월중",924,904,{"25-12":150,"26-1":145,"26-2":173,"26-3":159},159,1.21,14.56,16.38,11645,14685,13105,-10.76,18.89,-9.55,12.54,36.72,16.63,"2025/03/05 신규상장",""],
+["원자재","커버드콜","미국","기타","0022T0","SOL 국제금커버드콜액티브","골드 ETF + 미국상장 금ETF 콜옵션 매도","월말",787,787,{"25-12":49,"26-1":55,"26-2":56,"26-3":51},54,0.34,4.12,4.60,14100,16410,14845,-9.54,-0.56,-9.19,5.28,50.26,6.43,"2025/03/11 신규상장",""],
+["주식","배당","미국","해외배당","0036D0","TIME 미국배당다우존스액티브","SCHD 동일 기초지수 + 액티브","월중",238,252,{"25-12":53,"26-1":54,"26-2":55,"26-3":54},54,0.48,5.79,6.25,10425,10925,11190,2.43,4.30,2.91,7.34,8.18,8.90,"2025/04/29 신규상장",""],
+["혼합","커버드콜","미국","미개커","0040X0","SOL 팔란티어미국채커버드콜혼합","팔란티어 30% + 미국장기국채위클리커버드콜 70%","월말",2077,2143,{"25-12":250,"26-1":225,"26-2":205,"26-3":210},213,1.97,23.64,22.75,11255,10085,10660,5.70,-5.19,7.67,-5.29,36.30,0.40,"2025/04/22 신규상장",""],
+["혼합","커버드콜","혼합","미개커","0040Y0","SOL 팔란티어커버드콜OTM채권혼합","팔란티어 커버드콜OTM 30% + 단기국고채/통안채 70%","월말",3455,3455,{"25-12":206,"26-1":194,"26-2":185,"26-3":190},190,2.05,24.65,22.96,9915,8900,9250,3.93,-6.12,5.99,-6.71,21.00,-0.97,"2025/04/22 신규상장",""],
+["채권","금리형","미국","금리","0046A0","TIGER 미국초단기(3개월이하)국채","미국 3개월 이하 초단기 국채 + ETF","월말",4037,3663,{"25-12":27,"26-1":25,"26-2":29,"26-3":31},28,0.30,3.56,3.40,9990,9920,10455,5.39,0.80,5.69,4.65,2.84,5.51,"2025/04/29 신규상장",""],
+["주식","배당","미국","해외배당","0046Y0","ACE 미국배당퀄리티","미국 배당기업 + 퀄리티 팩터 300개","월말",513,513,{"25-12":18,"26-1":10,"26-2":16,"26-3":20},15,0.16,1.96,1.55,11850,12310,12215,-0.77,2.25,-0.61,3.08,16.62,3.47,"2025/05/13 신규상장",""],
+["채권","금리형","미국","금리","0048J0","KODEX 미국머니마켓액티브","미국 초단기 머니마켓","월말",5971,6051,{"25-12":55,"26-1":54,"26-2":53,"26-3":31},46,0.21,2.46,3.82,14435,14340,15110,5.37,0.86,5.57,4.68,5.09,5.63,"2025/05/13 신규상장",""],
+["혼합","혼합","미국","기타","0049K0","ACE 미국배당퀄리티채권혼합50","미국배당퀄리티 50% + 국내 단기채권 50%","월말",203,210,{"25-12":20,"26-1":16,"26-2":20,"26-3":23},20,0.21,2.50,2.17,10880,11060,11050,-0.09,1.00,0.12,1.56,8.94,2.10,"2025/05/13 신규상장",""],
+["주식","커버드콜","미국","미배커","0049M0","ACE 미국배당퀄리티+커버드콜액티브","미국배당퀄리티 40~50% + 미국 대형주 커버드콜","월말",823,825,{"25-12":69,"26-1":69,"26-2":69,"26-3":69},69,0.60,7.22,7.30,11335,11470,11465,-0.04,0.73,0.56,1.15,16.44,2.97,"2025/05/13 신규상장",""],
+["주식","배당","국내","국내배당","0052D0","TIGER 코리아배당다우존스","한국판 SCHD","월중",5432,4843,{"25-12":50,"26-1":51,"26-2":51,"26-3":58},53,0.37,4.41,4.87,13155,17580,15800,-10.13,20.50,-9.76,20.11,36.55,21.32,"2025/05/20 신규상장",""],
+["주식","커버드콜","혼합","미개커","0073X0","FOCUS 알리바바미국채커버드콜혼합","알리바바 30% + 미국 장기국채 70% + 콜옵션 매도","월말",103,102,{"25-12":110,"26-1":116,"26-2":112,"26-3":108},112,1.01,12.06,12.32,10905,11110,10745,-3.29,-0.93,-2.28,-1.47,16.91,1.61,"2025/07/02 신규상장",""],
+["혼합","혼합","미국","미국대표지수","0080X0","SOL 미국S&P500미국채혼합50","S&P500 50% + 미국 10년물 국채 50%","월중",596,591,{"25-12":19,"26-1":11,"26-2":18,"26-3":20},16,0.18,2.15,1.77,11055,11000,11160,1.45,0.48,1.63,0.95,12.47,1.39,"2025/07/16 신규상장",""],
+["혼합","혼합","미국","기타","0084D0","KIWOOM 미국테크100월간목표헤지액티브","미국기술주100 + 미국단기채 자동 비중 조절","월말",92,85,{"25-12":13,"26-1":13,"26-2":13,"26-3":13},13,0.12,1.46,1.46,10705,10290,10680,3.79,-3.03,3.91,-0.23,8.27,0.13,"2025/07/22 신규상장",""],
+["혼합","혼합","미국","미국대표지수","0084E0","KIWOOM 미국대형주500월간목표헤지액티브","미국 대표 대형주 500 + 미국 단기채 비중 조절","월말",298,307,{"25-12":16,"26-1":16,"26-2":16,"26-3":16},16,0.16,1.88,1.91,10055,9890,10235,3.49,-1.14,3.64,1.79,0.45,2.27,"2025/10/22 신규상장",""],
+["채권","채권","미국","채권","0085N0","ACE 미국10년국채액티브(H)","미국 잔존만기 7-10년 국채 + 환헤지 + 액티브","월말",1207,1216,{"25-12":30,"26-1":30,"26-2":29,"26-3":29},29,0.29,3.49,3.48,10115,10235,9965,-2.64,1.47,-2.35,-1.48,2.99,-0.61,"2025/07/22 신규상장",""],
+["채권","채권","미국","채권","0085P0","ACE 미국10년국채액티브","미국 잔존만기 7-10년 국채 + 액티브","월말",1003,918,{"25-12":33,"26-1":32,"26-2":30,"26-3":30},31,0.27,3.30,3.48,10585,10620,10925,2.87,1.91,3.15,3.21,8.00,4.08,"2025/07/22 신규상장",""],
+["리츠","리츠","국내","리츠","0086B0","TIGER 리츠부동산인프라TOP10액티브","국내 리츠·인프라 시총 상위 10개 + 액티브","월중",926,929,{"25-12":54,"26-1":54,"26-2":54,"26-3":54},54,0.49,5.93,6.19,10475,10890,10925,0.32,2.99,0.82,4.30,4.11,5.84,"2025/07/30 신규상장",""],
+["리츠","리츠","혼합","기타","0086C0","TIGER 리츠부동산인프라10채권혼합액티브","TIGER 리츠부동산인프라TOP10 50% + 단기채권 50%","월중",162,162,{"25-12":28,"26-1":28,"26-2":28,"26-3":28},28,0.27,3.22,3.28,10230,10430,10420,-0.10,1.93,0.17,1.86,2.20,2.68,"2025/07/30 신규상장",""],
+["주식","커버드콜","미국","S&P500커","0089C0","KODEX 미국S&P500변동성확대시커버드콜","평상시 S&P500 100%, 변동성↑ 시 커버드콜","월말",821,851,{"25-12":11,"26-1":9,"26-2":10,"26-3":138},52,1.24,14.89,5.70,11010,10710,11120,3.83,-2.10,5.07,1.00,12.03,2.43,"2025/08/12 신규상장",""],
+["주식","배당","국내","국내배당","0089D0","KODEX 금융고배당TOP10","코스피200 금융고배당 TOP10","월중",2635,2392,{"25-12":27,"26-1":27,"26-2":27,"26-3":62},39,0.48,5.72,4.34,10690,14400,13000,-9.72,23.58,-9.25,21.61,7.12,22.69,"2025/08/12 신규상장",""],
+["채권","채권","미국","채권","0091C0","KODEX 미국10년국채액티브(H)","미국 10년 국채 + 환헤지 + 액티브","월중",1632,1618,{"25-12":30,"26-1":31,"26-2":32,"26-3":28},30,0.29,3.42,3.63,10030,10095,9815,-2.77,1.52,-2.49,-2.14,1.84,-1.24,"2025/08/20 신규상장",""],
+["주식","커버드콜","중국","기타","0094L0","RISE 차이나테크TOP10위클리타겟커버드콜","차이나 기술주 TOP10 + 항생테크 위클리 콜옵션 (연 12%)","월말",146,157,{"25-12":108,"26-1":101,"26-2":87,"26-3":89},92,0.94,11.24,10.71,10345,9160,9505,3.77,-8.67,4.70,-8.12,3.32,-5.44,"2025/09/03 신규상장",""],
+["주식","커버드콜","국내","국배커","0094M0","RISE 코리아밸류업위클리고정커버드콜","코리아밸류업 70% + 코스피200 위클리 콜옵션 30% 고정","월중",516,516,{"25-12":125,"26-1":190,"26-2":310,"26-3":400},300,2.56,30.68,27.52,13080,17370,15645,-9.93,15.09,-7.37,19.61,28.54,26.49,"2025/09/03 신규상장",""],
+["주식","배당","국내","국내배당","0097L0","KIWOOM 한국고배당&미국AI테크","국내 고배당주 TOP15 70% + 미국AI테크 TOP10 30%","월말",317,295,{"25-12":30,"26-1":30,"26-2":40,"26-3":40},37,0.33,3.90,4.04,10900,13715,12300,-10.32,14.82,-9.99,12.84,11.64,13.85,"2025/09/03 신규상장",""],
+["주식","배당","국내","국내배당","0098N0","PLUS 자사주매입고배당주","예상배당수익률 + 최근1년 자사주매입율 합산순위 상위 30개","월중",1118,983,{"25-12":35,"26-1":40,"26-2":40,"26-3":40},40,0.31,3.76,4.47,10745,14315,12770,-10.79,22.26,-10.48,18.85,7.61,19.96,"2025/09/16 신규상장",""],
+["주식","커버드콜","국내","코스피커","0104N0","TIGER 200타겟위클리커버드콜","코스피 200 + 위클리 옵션 매도(20%, 연 7% 한도)","월중",1661,1438,{"25-12":72,"26-1":80,"26-2":92,"26-3":97},90,0.60,7.20,8.40,12810,18200,16160,-11.21,18.92,-10.61,26.15,21.08,28.25,"2025/09/23 신규상장",""],
+["주식","커버드콜","국내","국배커","0104P0","TIGER 코리아배당다우존스위클리커버드콜","국내 배당성장 + 위클리 옵션 매도(20%, 연 7%+α 한도)","월말",428,390,{"25-12":100,"26-1":103,"26-2":114,"26-3":112},110,0.95,11.37,13.13,10025,13255,11825,-10.79,20.54,-9.84,17.96,6.95,21.24,"2025/09/23 신규상장",""],
+["주식","배당","국내","국내배당","0105E0","SOL 코리아고배당","국내 고배당 기업 30개","월중",1103,1037,{"25-12":61,"26-1":60,"26-2":60,"26-3":60},60,0.46,5.49,6.69,10755,14755,13115,-11.11,24.14,-10.66,21.94,8.84,23.62,"2025/09/23 신규상장",""],
+["주식","혼합","미국","기타","0107F0","KIWOOM 미국고배당&AI테크","미국 고배당 TOP 20 + AI 성장주 TOP 10","월말",280,278,{"25-12":32,"26-1":32,"26-2":32,"26-3":32},32,0.29,3.45,3.73,10290,10625,11125,4.71,2.17,4.99,8.11,5.46,9.05,"2025/09/23 신규상장",""],
+["주식","배당","국내","국내배당","0111J0","HANARO 증권고배당TOP3플러스","배당수익률 상위 15개 중 ROE 상위 10개","월말",1273,1009,{"26-1":10,"26-2":25,"26-3":30},22,0.17,2.05,2.54,10250,19470,17550,-9.86,51.41,-9.69,71.22,-3.48,71.85,"2025/10/29 신규상장","2026년부터 분배금 지급예정"],
+["주식","배당","미국","해외배당","0115C0","RISE 미국고배당다우존스TOP10","다우존스 30대 기업 중 예상 배당수익률 상위 10개 동일가중","월중",176,183,{"25-12":35,"26-1":34,"26-2":34,"26-3":34},34,0.29,3.46,3.84,10625,11475,11790,2.75,6.20,3.03,10.96,4.75,11.92,"2025/10/22 신규상장",""],
+["주식","커버드콜","중국","기타","0128D0","PLUS 차이나항셍테크위클리타겟커버드콜","중국 항생테크 30개 80% + 위클리 콜옵션 20% (연 15%)","월말",54,54,{"25-12":117,"26-1":121,"26-2":108,"26-3":105},111,1.26,15.15,14.09,9485,8600,8315,-3.31,-9.58,-2.05,-12.34,-0.77,-8.81,"2025/11/19 신규상장",""],
+["주식","커버드콜","미국","미개커","0132K0","PLUS 테슬라위클리커버드콜채권혼합","테슬라 30% + 국고채 3년 70% 채권혼합","월중",892,1025,{"25-12":25,"26-1":212,"26-2":200,"26-3":195},202,2.12,25.46,24.24,10015,9400,9190,-2.23,-0.67,-0.11,-8.24,2.57,-2.18,"2025/12/09 신규상장",""],
+["주식","커버드콜","미국","S&P500커","0138T0","RISE 미국S&P500데일리고정커버드콜","S&P500 90% + 데일리 콜옵션 매도 10%","월중",291,292,{"25-12":10,"26-1":103,"26-2":92,"26-3":119},105,1.24,14.89,12.82,9795,9640,9590,-0.52,-0.96,0.72,-2.09,-0.15,1.11,"2025/12/23 신규상장 · 2026/04 분배 월말→월중 변경",""],
+["주식","배당","국내","국내배당","0139P0","ACE 고배당주","국내 우량 고배당주 20개 + 배당락 회복률 활용","월말",722,640,{"25-12":22,"26-1":44,"26-2":44,"26-3":44},44,0.32,3.88,4.82,10945,15415,13610,-11.71,29.37,-11.39,24.35,0.57,25.56,"2025/12/16 신규상장",""],
+["주식","커버드콜","미국","나스닥커","0144L0","KODEX 미국성장커버드콜액티브","테크 성장주 + 선택적 옵션 매매(한국판 QDVO)","월말",3202,3214,{"26-1":97,"26-2":94,"26-3":93},95,1.01,12.08,11.56,9825,9345,9235,-1.18,-3.56,-0.17,-6.01,-2.71,-3.11,"2025/12/23 신규상장",""],
+["주식","배당","국내","국내배당","0152E0","SOL 배당성향탑픽액티브","배당성향 40% or 25% 이상 + 배당성장 10% 기업 고배당","월말",614,491,{"26-2":70,"26-3":50},60,0.42,5.08,7.15,10070,13315,11820,-11.23,27.22,-10.80,17.38,null,18.57,"2026/1/13 신규상장",""],
+["주식","배당","국내","국내배당","0153K0","KODEX 주주환원고배당주","배당성향 40% or 25% 이상 + 배당 10% 증가 기업","월중",2765,2480,{"26-3":32},32,0.28,3.34,3.69,10420,13090,11480,-12.30,25.14,-12.02,10.17,null,10.48,"2026/1/20 신규상장",""],
+["리츠","리츠","국내","리츠","0153P0","ACE 리츠부동산인프라액티브","맥쿼리인프라 + 인프라/리츠 시총 상위 14개","월말",142,176,{"26-2":72,"26-3":54},63,0.51,6.08,7.40,10220,10560,10665,0.99,4.41,1.50,4.35,null,5.59,"2026/1/20 신규상장",""],
+["주식","배당","미국","해외배당","0153X0","PLUS 미국고배당주액티브","미국 우량주 중 예상 배당수익률 TOP20","월말",242,263,{"26-2":45,"26-3":47},46,0.41,4.93,5.51,10015,10850,11430,5.35,10.37,5.76,14.13,null,15.05,"2026/1/27 신규상장",""],
+["주식","커버드콜","국내","코스피커","0167B0","SOL 200타겟위클리커버드콜","코스피 200 + 위클리 옵션 매도 (연 15% 한도)","월말",null,1250,{},null,0,0,null,10120,null,9690,null,10.37,null,-4.25,null,-4.25,"2026/3/17 신규상장",""],
+["리츠","리츠","국내","리츠","0174J0","DASHIN343 오피스리츠플러스","(2026/4 신규상장 · 데이터 입력 대기)","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/4 신규상장 — 시총·분배·가격 미입력",""],
+["주식","커버드콜","국내","국테크커","0177R0","TIGER 반도체TOP10커버드콜액티브","국내 반도체 TOP10 + 커버드콜 (국내테크 카테고리 신규)","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/4 신규상장",""]
+];
+
+// 4월 분배공시일 종가 일괄 업데이트 (2026년 4월 30일 수집)
+// 각 ETF의 [pr1=1/2(또는 상장일), pr2=전월 분배공시일(월중=3/11, 월말=3/27), pr3=당월 분배공시일(월중=4/13, 월말=4/28)]
+const PRICE_UPDATES = {
+"091170":[12503,15130,15890],"104530":[15322,19581,19990],"136340":[105314,104210,104685],"153130":[112586,113005,113225],
+"161510":[20968,25925,27685],"166400":[17364,19370,22690],"181480":[78973,78460,84455],"182480":[12241,12585,13500],
+"211900":[21745,28700,31400],"214980":[113912,114425,114615],"237370":[14472,15830,15860],"245340":[33795,33870,35225],
+"251600":[14197,15635,16160],"273140":[113862,114375,114635],"279530":[13795,17615,18590],"284430":[17096,19610,20065],
+"289480":[9515,10280,11540],"290080":[8296,8415,8375],"316300":[14505,14240,14260],"322410":[18367,22650,24365],
+"329200":[4397,4610,4925],"329650":[14225,14340,14405],"329660":[17495,17635,17815],"329670":[21125,21510,21775],
+"332610":[130660,137120,134690],"332620":[96249,98530,98260],"336160":[101525,100525,100980],"341850":[4840,4985,5245],
+"352540":[12640,12195,11895],"352560":[11397,11405,12285],"373790":[15572,16625,16225],"402970":[12773,14560,14695],
+"423160":[109971,110630,110865],"429000":[12757,13495,13515],"429740":[6970,7095,7670],"432840":[18478,18290,19640],
+"433330":[20538,20385,21890],"437070":[62820,65385,64575],"437080":[99964,98835,99740],"440340":[11759,12755,12565],
+"441640":[12230,12760,12850],"441680":[10640,11060,11420],"441800":[19836,26635,30970],"446720":[11569,13525,13415],
+"448100":[64351,83435,103445],"448330":[13552,15340,15660],"452360":[10902,12160,12325],"453330":[16359,15465,16990],
+"453850":[7539,7490,7525],"455030":[12279,12940,12675],"455660":[9639,9470,9675],"458260":[48003,47230,47950],
+"458730":[12615,14745,14640],"458750":[11065,12675,12810],"458760":[9544,11320,11090],"459580":[1066413,1073225,1075680],
+"460660":[11058,11785,11695],"460960":[11366,11695,11920],"464470":[52284,54275,53215],"465670":[14484,15020,15000],
+"466940":[21015,25270,26500],"468370":[11344,11865,11775],"468380":[11469,11870,11855],"468630":[11630,12010,11915],
+"471460":[57361,51835,52930],"472150":[13068,16745,20910],"472830":[8832,9195,9025],"472870":[7855,7925,7780],
+"473330":[8878,9285,9145],"474220":[15414,14921,15135],"475080":[8737,8550,8510],"475380":[10159,11015,11580],
+"475720":[10490,11935,14020],"476550":[7356,7310,7350],"476690":[10412,9815,9725],"476750":[8445,8555,8320],
+"476760":[9755,10185,9945],"476800":[4794,4741,4970],"480020":[12149,11847,12040],"480030":[10234,10366,10525],
+"480040":[11760,13647,15105],"480460":[10022,10400,11130],"481050":[1014703,1021345,1023760],"481060":[7990,8063,7940],
+"481340":[9595,9885,9690],"482730":[11473,11430,12225],"483280":[12221,11440,13160],"483290":[9089,10865,10540],
+"484790":[8715,8625,8680],"484880":[17093,21310,22565],"486290":[10185,10070,11070],"487950":[9781,11190,12220],
+"489030":[8280,8795,8685],"489250":[10820,12330,12475],"490490":[10510,11335,11425],"490590":[12489,12510,15650],
+"490600":[8256,9011,9230],"491620":[10455,10110,11305],"493420":[10661,12125,12290],"493810":[11500,11237,11405],
+"494210":[10593,10495,11290],"494300":[9528,9790,10340],"494420":[9250,9386,9545],"495040":[18016,24855,25910],
+"495050":[18172,24956,26250],"495230":[18503,24550,30275],"495330":[18060,24150,29550],"495850":[18126,24230,29700],
+"496080":[18156,24300,29710],"497780":[9357,12350,11495],"497880":[49650,50010,50145],"498400":[13276,17237,18075],
+"498410":[11316,12945,13295],"498860":[14871,19960,20300],"499150":[10568,10150,10905],"499660":[993488,999925,1002275],
+"0000D0":[9641,9800,10275],"0004G0":[8877,9320,9000],"0005A0":[9420,9540,10030],"0008S0":[8670,9861,9965],
+"0013P0":[12151,11410,12110],"0013R0":[9473,9390,9190],"0015E0":[10559,10320,10870],"0015F0":[10860,10310,10270],
+"0018C0":[11091,12886,12990],"0022T0":[13957,14795,15020],"0036D0":[10226,10842,11465],"0040X0":[10584,10450,10195],
+"0040Y0":[9321,9060,8950],"0046A0":[9909,10425,10215],"0046Y0":[11805,12195,12745],"0048J0":[14304,15080,14780],
+"0049K0":[10825,11030,11260],"0049M0":[11142,11400,11830],"0052D0":[12974,15840,16020],"0073X0":[10582,10640,10550],
+"0080X0":[10990,11130,11235],"0084D0":[10672,10670,11545],"0084E0":[10008,10220,10650],"0085N0":[10034,9940,10005],
+"0085P0":[10495,10895,10730],"0086B0":[10280,10622,11215],"0086C0":[10130,10270,10575],"0089C0":[10859,10985,11395],
+"0089D0":[10544,13006,13385],"0091C0":[9913,9984,9860],"0094L0":[10055,9420,9100],"0094M0":[12111,16445,16490],
+"0097L0":[10804,12260,13565],"0098N0":[10582,12890,12915],"0104N0":[12520,16614,17415],"0104P0":[9759,11715,12310],
+"0105E0":[10552,13215,13240],"0107F0":[10203,11095,11620],"0111J0":[10210,17520,18905],"0115C0":[10510,11489,11215],
+"0128D0":[9134,8210,8095],"0132K0":[9217,9105,8860],"0138T0":[9375,9420,9565],"0139P0":[10849,13570,14450],
+"0144L0":[9541,9145,10035],"0152E0":[9974,11770,12390],"0153K0":[10366,11640,11650],"0153P0":[10104,10615,11170],
+"0153X0":[9933,11385,11100],"0167B0":[10120,9690,12085],"0174J0":[9785,9785,10940],"0177R0":[10715,10715,11500]
+};
+// 신규 상장 ETF 상장일 정보 (이번달/올해 수익률에 "상장일 이후" 표기)
+const NEW_LISTINGS = {
+  "0152E0": {lst: "1/13"},
+  "0153K0": {lst: "1/20"},
+  "0153P0": {lst: "1/20"},
+  "0153X0": {lst: "1/27"},
+  "0167B0": {lst: "3/17"},
+  "0174J0": {lst: "3/31", retMLst: true},
+  "0177R0": {lst: "4/21", retMLst: true}
+};
+// 2025년 신규 상장 ETF 상장일 정보 (2025년도 TR 셀에 "상장일 이후" 표기)
+const LISTING_2025 = {
+  "0004G0": "1/26", "0005A0": "1/7", "0008S0": "1/21",
+  "0013P0": "2/18", "0013R0": "2/18", "0015E0": "2/12", "0015F0": "2/12",
+  "0018C0": "3/5", "0022T0": "3/11",
+  "0036D0": "4/29", "0040X0": "4/22", "0040Y0": "4/22", "0046A0": "4/29",
+  "0046Y0": "5/13", "0048J0": "5/13", "0049K0": "5/13", "0049M0": "5/13",
+  "0052D0": "5/20",
+  "0073X0": "7/2", "0080X0": "7/16",
+  "0084D0": "7/22", "0085N0": "7/22", "0085P0": "7/22",
+  "0086B0": "7/30", "0086C0": "7/30",
+  "0089C0": "8/12", "0089D0": "8/12", "0091C0": "8/20",
+  "0094L0": "9/3", "0094M0": "9/3", "0097L0": "9/3",
+  "0098N0": "9/16",
+  "0104N0": "9/23", "0104P0": "9/23", "0105E0": "9/23", "0107F0": "9/23",
+  "0084E0": "10/22", "0115C0": "10/22", "0111J0": "10/29",
+  "0128D0": "11/19",
+  "0132K0": "12/9", "0139P0": "12/16", "0138T0": "12/23", "0144L0": "12/23"
+};
+
+// 168개 ETF 현재 시총 + 최근 종가 (네이버 모바일, 2026/5/1 기준)
+// [현재 시총(억), 현재 종가(원)]. "조" 단위 종목은 수동 환산 적용.
+// 가격 비율로 4/13(월중)·4/28(월말) 시점 시총 환산: mc ≈ current_mc × (target_close / current_close)
+const CURRENT_MARKET_CAP = {
+"091170":[4657,15840],"104530":[520,20805],"136340":[1469,104425],"153130":[7879,113340],
+"161510":[27985,27165],"166400":[113,22530],"181480":[101,84220],"182480":[1570,13480],
+"211900":[1032,30360],"214980":[20835,114775],"237370":[1804,16110],"245340":[1408,35015],
+"251600":[8086,15980],"273140":[3133,114845],"279530":[4150,18280],"284430":[16991,21175],
+"289480":[298,11445],"290080":[140,8245],"316300":[71,14225],"322410":[548,24340],
+"329200":[16710,4665],"329650":[2555,14435],"329660":[954,18005],"329670":[864,22155],
+"332610":[130,135015],"332620":[202,97800],"336160":[581,100695],"341850":[101,5045],
+"352540":[524,11910],"352560":[331,12250],"373790":[46,16335],"402970":[8481,15010],
+"423160":[44061,110665],"429000":[1648,13400],"429740":[94,7260],"432840":[157,19660],
+"433330":[2820,21860],"437070":[408,64550],"437080":[3070,98870],"440340":[239,12570],
+"441640":[15544,12830],"441680":[3501,11350],"441800":[8800,30555],"446720":[9488,13535],
+"448100":[1237,103080],"448330":[11729,16045],"452360":[2087,12350],"453330":[960,16850],
+"453850":[17891,7430],"455030":[6659,12735],"455660":[642,9585],"458260":[2816,47475],
+"458730":[34149,14780],"458750":[612,13025],"458760":[7296,11130],"459580":[80792,1073785],
+"460660":[176,11730],"460960":[879,11875],"464470":[437,53030],"465670":[128,15005],
+"466940":[10013,26280],"468370":[185,11815],"468380":[1072,11815],"468630":[357,11870],
+"471460":[270,51910],"472150":[14020,20325],"472830":[497,8950],"472870":[2989,7685],
+"473330":[3534,9050],"474220":[5168,16175],"475080":[3444,8360],"475380":[325,11600],
+"475720":[9019,13790],"476550":[10404,7230],"476690":[406,9670],"476750":[790,8230],
+"476760":[2864,9910],"476800":[5615,4855],"480020":[1878,12955],"480030":[1570,10905],
+"480040":[1353,17125],"480460":[107,10720],"481050":[28865,1021850],"481060":[8677,7885],
+"481340":[245,9625],"482730":[5856,12050],"483280":[5790,12925],"483290":[1663,10590],
+"484790":[5902,8575],"484880":[4087,22335],"486290":[14883,10935],"487950":[170,12140],
+"489030":[3174,8510],"489250":[5205,12725],"490490":[4406,11475],"490590":[5332,14710],
+"490600":[1320,9425],"491620":[3754,10960],"493420":[326,12525],"493810":[2764,12365],
+"494210":[89,11130],"494300":[7938,10010],"494420":[173,9585],"495040":[777,29335],
+"495050":[8049,29645],"495230":[3038,30075],"495330":[1207,29440],"495850":[6977,29500],
+"496080":[4435,29470],"497780":[282,11735],"497880":[2344,50055],"498400":[46722,20510],
+"498410":[7425,13050],"498860":[579,19950],"499150":[87,10840],"499660":[4457,1000480],
+"0000D0":[650,10310],"0004G0":[117,8990],"0005A0":[1704,9850],"0008S0":[2278,10145],
+"0013P0":[156,11975],"0013R0":[343,9025],"0015E0":[64,10695],"0015F0":[182,10095],
+"0018C0":[1006,13155],"0022T0":[832,14855],"0036D0":[374,12060],"0040X0":[2340,9830],
+"0040Y0":[3952,8545],"0046A0":[3720,10260],"0046Y0":[540,12710],"0048J0":[6320,14825],
+"0049K0":[236,11225],"0049M0":[855,11710],"0052D0":[4733,16520],"0073X0":[68,10460],
+"0080X0":[642,11470],"0084D0":[92,11485],"0084E0":[197,10650],"0085N0":[1181,9925],
+"0085P0":[953,10710],"0086B0":[767,11190],"0086C0":[174,10530],"0089C0":[743,11340],
+"0089D0":[2509,13560],"0091C0":[1735,9815],"0094L0":[131,9065],"0094M0":[992,18205],
+"0097L0":[318,13250],"0098N0":[993,13240],"0104N0":[1834,19935],"0104P0":[388,12135],
+"0105E0":[6682,13805],"0107F0":[294,11545],"0111J0":[939,17725],"0115C0":[210,11035],
+"0128D0":[57,8130],"0132K0":[1187,8895],"0138T0":[319,9980],"0139P0":[660,14050],
+"0144L0":[3634,9915],"0152E0":[475,12170],"0153K0":[2303,11870],"0153P0":[179,10835],
+"0153X0":[267,11125],"0167B0":[3916,11655],"0174J0":[62,10295],"0177R0":[2499,11465]
+};
+
+// 4월 분배금 + 최근 분배율 + 1년 분배율 (search-etf.com, 2026/5/1 기준)
+// [4월 분배금(원), 최근 분배율(%), 1년 분배율(%) - null이면 1년 미만]
+const DIVIDEND_UPDATES = {
+"091170":[59,0.37,3.18],"136340":[205,0.20,2.78],"161510":[86,0.32,3.44],"166400":[90,0.40,3.39],
+"181480":[210,0.25,3.52],"182480":[50,0.37,3.20],"211900":[449,1.48,2.74],"245340":[25,0.07,1.27],
+"251600":[48,0.30,3.44],"279530":[70,0.38,3.58],"289480":[80,0.70,6.81],"290080":[69,0.84,9.58],
+"316300":[64,0.45,5.14],"322410":[60,0.25,3.93],"329200":[33,0.71,8.49],"332610":[392,0.29,3.45],
+"332620":[348,0.36,4.16],"336160":[159,0.16,3.13],"341850":[24,0.48,5.71],"373790":[24,0.15,1.80],
+"423160":[240,0.22,1.92],"429000":[24,0.18,1.97],"429740":[35,0.48,6.47],"432840":[13,0.07,0.70],
+"437070":[261,0.40,3.26],"437080":[384,0.39,4.50],"440340":[46,0.37,3.51],"441680":[114,1.00,11.20],
+"441800":[154,0.50,5.09],"448100":[60,0.06,0.68],"453850":[25,0.34,3.92],"453330":[15,0.09,1.06],
+"455030":[37,0.29,2.94],"455660":[54,0.56,6.74],"458260":[150,0.32,4.93],"459580":[2389,0.22,1.98],
+"458730":[33,0.22,2.81],"458760":[92,0.83,9.39],"460660":[29,0.25,2.84],"460960":[72,0.61,6.53],
+"464470":[108,0.20,2.35],"465670":[16,0.11,1.93],"466940":[87,0.33,3.34],"468380":[71,0.60,6.35],
+"468630":[46,0.39,4.09],"471460":[127,0.24,2.60],"472150":[415,2.04,13.67],"472830":[68,0.76,11.52],
+"472870":[19,0.25,3.25],"475080":[107,1.28,15.93],"475380":[35,0.30,3.40],"476550":[74,1.02,13.14],
+"476690":[12,0.12,1.81],"475720":[237,1.72,13.65],"476750":[20,0.24,3.20],"476760":[33,0.33,3.76],
+"481050":[2363,0.23,2.73],"480460":[50,0.47,5.60],"482730":[101,0.84,9.39],"481340":[35,0.36,4.53],
+"483280":[160,1.24,13.44],"483290":[107,1.01,10.79],"484790":[37,0.43,5.03],"486290":[138,1.26,13.95],
+"487950":[65,0.54,5.83],"489030":[130,1.53,20.62],"490590":[374,2.54,15.85],"491620":[276,2.52,18.39],
+"494300":[169,1.69,19.27],"495230":[60,0.20,1.28],"495850":[25,0.08,1.05],"496080":[28,0.10,0.88],
+"497780":[46,0.39,3.95],"0000D0":[102,0.99,11.38],"498410":[165,1.26,14.17],"499660":[2270,0.23,2.74],
+"0005A0":[124,1.26,14.24],"0015E0":[20,0.19,2.20],"0015F0":[20,0.20,2.33],"0013R0":[112,1.24,15.75],
+"0013P0":[19,0.16,1.93],"0046A0":[27,0.26,3.29],"0048J0":[49,0.33,3.80],"0049M0":[71,0.61,6.02],
+"0046Y0":[13,0.10,1.27],"0049K0":[20,0.18,1.91],"0073X0":[105,1.00,9.58],"0084D0":[13,0.11,0.88],
+"0085P0":[30,0.28,2.37],"0085N0":[30,0.30,2.45],"0089C0":[7,0.06,1.77],"0094L0":[87,0.96,7.47],
+"0097L0":[45,0.34,1.74],"0104P0":[114,0.94,5.15],"0107F0":[33,0.29,1.65],"0084E0":[16,0.15,0.79],
+"0111J0":[40,0.23,0.37],"0128D0":[105,1.29,5.55],"0139P0":[44,0.31,1.10],"0144L0":[99,1.00,2.86],
+"0153P0":[54,0.50,1.16],"0153X0":[47,0.42,0.83],"0174J0":[10,0.10,null],"433330":[10,0.05,0.84],
+"446720":[30,0.22,2.87],"452360":[28,0.23,2.97],"473330":[95,1.05,13.51],"484880":[76,0.34,3.25],
+"494210":[113,1.02,11.34],"495330":[31,0.11,1.11],"497880":[145,0.29,3.01],"499150":[10,0.09,1.05],
+"0004G0":[28,0.31,3.38],"0022T0":[51,0.34,3.53],"0040X0":[175,1.78,21.77],"0040Y0":[177,2.07,26.97],
+"0152E0":[50,0.41,0.99],"0167B0":[250,2.15,null],"104530":[75,0.36,3.75],"153130":[231,0.20,1.72],
+"214980":[266,0.23,1.69],"237370":[44,0.27,1.91],"273140":[251,0.22,1.63],"284430":[20,0.09,1.10],
+"329650":[33,0.23,1.54],"329660":[30,0.17,1.31],"329670":[33,0.15,1.20],"402970":[44,0.29,2.82],
+"441640":[99,0.77,8.82],"448330":[30,0.19,1.62],"458750":[63,0.48,5.59],"474220":[126,0.78,9.01],
+"476800":[30,0.62,8.16],"480020":[150,1.16,13.48],"480030":[133,1.22,14.25],"480040":[187,1.09,9.72],
+"481060":[80,1.01,13.11],"489250":[33,0.26,2.73],"490600":[114,1.21,16.15],"493810":[143,1.16,13.51],
+"494420":[105,1.10,13.27],"495040":[20,0.07,0.94],"495050":[26,0.09,0.91],"498400":[262,1.28,10.62],
+"498860":[50,0.25,3.10],"0008S0":[101,1.00,10.82],"0018C0":[163,1.24,13.33],"0036D0":[57,0.47,4.37],
+"0052D0":[58,0.35,2.75],"0086B0":[54,0.48,3.38],"0086C0":[28,0.27,1.85],"0089D0":[66,0.49,1.26],
+"0091C0":[33,0.34,2.04],"0094M0":[340,1.87,7.36],"0098N0":[70,0.53,1.70],"0104N0":[103,0.52,2.38],
+"0115C0":[34,0.31,1.24],"0132K0":[180,2.02,7.11],"0138T0":[118,1.18,3.25],"0153K0":[33,0.28,0.27],
+"490490":[30,0.26,2.79],"493420":[34,0.27,2.28],"0080X0":[22,0.19,1.14],"0105E0":[60,0.43,2.43],
+"352540":[64,0.54,6.22],"352560":[32,0.26,3.49]
+};
+
+// Convert raw rows to objects.
+const ETFS = RAW.map(r => {
+  const o = {};
+  HEADERS.forEach((h, i) => o[h] = r[i]);
+  // 4월 종가 일괄 업데이트 + 신규 상장 표기
+  const upd = PRICE_UPDATES[o.code];
+  if (upd) {
+    o.pr1 = upd[0];
+    o.pr2 = upd[1];
+    o.pr3 = upd[2];
+    // 가격 기반 수익률 재계산
+    if (o.pr2 != null && o.pr3 != null) {
+      o.retM = +((o.pr3 - o.pr2) / o.pr2 * 100).toFixed(2);
+    }
+    if (o.pr1 != null && o.pr3 != null) {
+      o.ytd = +((o.pr3 - o.pr1) / o.pr1 * 100).toFixed(2);
+    }
+  }
+  // 시가총액 일괄 업데이트 (현재 시총 × 가격비율로 4/13·4/28 시점 환산)
+  const mcInfo = CURRENT_MARKET_CAP[o.code];
+  if (mcInfo && mcInfo[0] != null && mcInfo[1] != null && mcInfo[1] > 0) {
+    const curMc = mcInfo[0];
+    const curClose = mcInfo[1];
+    if (o.pr3 != null) o.mc2 = Math.round(curMc * o.pr3 / curClose);
+    if (o.pr2 != null) o.mc1 = Math.round(curMc * o.pr2 / curClose);
+  }
+  // 4월 분배금 + 분배율 + 1년 분배율 적용
+  const dupd = DIVIDEND_UPDATES[o.code];
+  if (dupd) {
+    o.divs = Object.assign({}, o.divs || {}, {"26-4": dupd[0]});
+    o.dr = dupd[1];
+    if (dupd[2] != null) o.ax12 = dupd[2];
+    o.divCurr = dupd[0];
+    o.divPrev = (o.divs["26-3"] != null) ? o.divs["26-3"] : null;
+    o.divDiff = (o.divCurr != null && o.divPrev != null) ? o.divCurr - o.divPrev : null;
+    // 평균 분배금 재계산
+    const divVals = Object.values(o.divs).filter(v => v != null && !isNaN(v));
+    o.avg = divVals.length ? Math.round(divVals.reduce((a,b)=>a+b,0) / divVals.length) : null;
+  }
+  // TR 수익률 재계산 (분배금 반영)
+  if (o.pr2 != null && o.pr3 != null) {
+    const aprDiv = (dupd && dupd[0] != null) ? dupd[0] : 0;
+    o.retTR = +(o.retM + (aprDiv / o.pr2 * 100)).toFixed(2);
+  }
+  if (o.pr1 != null && o.pr3 != null && o.divs) {
+    let divSum = 0;
+    Object.keys(o.divs).forEach(k => {
+      if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
+    });
+    o.ytdTR = +(o.ytd + (divSum / o.pr1 * 100)).toFixed(2);
+  }
+  // 신규 상장 표기
+  const nl = NEW_LISTINGS[o.code];
+  if (nl) {
+    o.lst = nl.lst;
+    o.retMLst = !!nl.retMLst;
+    o.ytdLst = true;
+    o.y2025Lst = "before"; // 2026년 상장 = 2025년 거래 없음
+  } else {
+    o.lst = null;
+    o.retMLst = false;
+    o.ytdLst = false;
+    o.y2025Lst = false;
+  }
+  // 2025년 신규 상장 (y2025 셀에 부분 기간 마커)
+  const lst25 = LISTING_2025[o.code];
+  if (lst25) {
+    o.y2025Lst = true;
+    o.y2025LstDate = lst25;
+  }
+  // derived
+  if (o.mc1 != null && o.mc2 != null) {
+    o.mcDiff = o.mc2 - o.mc1;
+    o.mcDiffPct = o.mc1 ? +(o.mcDiff / o.mc1 * 100).toFixed(2) : 0;
+  } else { o.mcDiff = null; o.mcDiffPct = null; }
+  // current month dividend (assume "26-3" as latest fully-known month for now)
+  const monthKeys = Object.keys(o.divs || {}).filter(k => o.divs[k] != null);
+  o.divCurr = monthKeys.length ? o.divs[monthKeys[monthKeys.length-1]] : null;
+  o.divPrev = monthKeys.length > 1 ? o.divs[monthKeys[monthKeys.length-2]] : null;
+  o.divDiff = (o.divCurr != null && o.divPrev != null) ? o.divCurr - o.divPrev : null;
+  o.mcCurr = o.mc2;
+  return o;
+});
+
+// ==== UI ==================================================================
+const F1_OPTS = ["리츠","원자재","주식","채권","혼합"];
+const F2_OPTS = ["금리형","리츠","배당","시장지수","테마","혼합","커버드콜"];
+const F3_OPTS = ["국내","미국","일본","중국","혼합","기타"];
+const F4_OPTS = ["국내배당","국배커","국테크커","금리","기타","나스닥커","리츠","미개커","미국대표지수","미배커","미채커","채권","코리아","코스피커","해외배당","S&P500커","테크커"];
+// 구분4 줄임말 → 풀네임 매핑 (UI 표시용)
+const F4_LABEL = {
+  "국배커": "국내배당커버드콜",
+  "국테크커": "국내테크커버드콜",
+  "미개커": "미국개별주식커버드콜",
+  "미배커": "미국배당커버드콜",
+  "미채커": "미국채권커버드콜",
+  "코스피커": "코스피커버드콜",
+  "나스닥커": "나스닥커버드콜",
+  "테크커": "미국테크커버드콜",
+  "S&P500커": "S&P500커버드콜",
+  "코리아": "코리아밸류업"
+};
+function f4Label(v){ return F4_LABEL[v] || v; }
+
+const state = {
+  q: "",
+  when: "all",
+  f1: new Set(),
+  f2: new Set(),
+  f3: new Set(),
+  f4: new Set(),
+  sort: { k: null, dir: null },   // null = 원래 순서 (정렬 없음)
+  expanded: new Set()
+};
+// 3-state 정렬 사이클: desc → asc → none(원래) → desc ...
+function cycleSort(k){
+  if (state.sort.k !== k) { state.sort.k = k; state.sort.dir = "desc"; return; }
+  if (state.sort.dir === "desc") { state.sort.dir = "asc"; return; }
+  if (state.sort.dir === "asc") { state.sort.k = null; state.sort.dir = null; return; }
+  state.sort.k = k; state.sort.dir = "desc";
+}
+
+document.getElementById("periodBadge").textContent = PERIOD_LABEL;
+
+// (Viewport toggle removed - mobile is auto-detected via @media query)
+
+// ==== 엑셀(XLSX) 저장 ============================================================
+// 168개 전체 ETF 데이터를 자동필터 켜진 상태로 .xlsx 저장
+const xlsxBtn = document.getElementById("xlsxBtn");
+function makeXLSXFilename() {
+  const t = new Date();
+  const y = t.getFullYear();
+  const m = String(t.getMonth() + 1).padStart(2, "0");
+  const d = String(t.getDate()).padStart(2, "0");
+  const day = t.getDate();
+  let cycle = "";
+  if (day >= 28) cycle = "_월말";
+  else if (day >= 13) cycle = "_월중";
+  return `똑재TV_월배당ETF_${y}-${m}-${d}${cycle}.xlsx`;
+}
+function exportXLSX() {
+  if (typeof XLSX === "undefined") {
+    alert("XLSX 라이브러리가 로드되지 않았습니다. 인터넷 연결을 확인하거나 페이지를 새로고침해주세요.");
+    return;
+  }
+  const monthLabels = ["25-12","26-1","26-2","26-3","26-4","26-5","26-6","26-7","26-8","26-9","26-10","26-11","26-12"];
+  const monthHeaders = ["'25.12 분배금","'26.1 분배금","'26.2 분배금","'26.3 분배금","'26.4 분배금","'26.5 분배금","'26.6 분배금","'26.7 분배금","'26.8 분배금","'26.9 분배금","'26.10 분배금","'26.11 분배금","'26.12 분배금"];
+  const headers = [
+    "순번","종목코드","종목명","구분1(자산)","구분2(전략)","구분3(지역)","구분4(세부)",
+    "배당기준일",
+    "전월시총(억)","당월시총(억)","시총증감액(억)","시총증감률(%)",
+    ...monthHeaders,
+    "평균분배금","당월분배금","전월대비","당월분배율(%)","1년분배율(%)",
+    "1/2종가","전월baseline종가","당월baseline종가",
+    "이번달주가수익률(%)","이번달TR(%)","올해주가상승률(%)","올해TR(%)","2025년도TR(%)",
+    "비고","특이사항","신규상장일"
+  ];
+  const rows = ETFS.map((e, i) => {
+    const monthVals = monthLabels.map(k => (e.divs && e.divs[k] != null) ? e.divs[k] : null);
+    // 신규상장일 통합 (2025/2026년 신규 상장만 표시, 이전 상장은 빈칸)
+    let listDate = "";
+    if (e.lst) listDate = "2026/" + e.lst;
+    else if (typeof LISTING_2025 !== "undefined" && LISTING_2025[e.code]) {
+      listDate = "2025/" + LISTING_2025[e.code];
+    }
+    return [
+      i + 1, e.code, e.nm, e.c1, e.c2, e.c3, f4Label(e.c4),
+      e.dt,
+      e.mc1, e.mc2, e.mcDiff, e.mcDiffPct,
+      ...monthVals,
+      e.avg, e.divCurr, e.divDiff, e.dr, e.ax12,
+      e.pr1, e.pr2, e.pr3,
+      e.retM, e.retTR, e.ytd, e.ytdTR, e.y2025,
+      e.note || "", e.note2 || "", listDate
+    ];
+  });
+  const aoa = [headers, ...rows];
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+  // 자동필터 + freeze top row
+  const lastCol = headers.length - 1;
+  const lastRow = rows.length;
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({s:{r:0,c:0}, e:{r:lastRow, c:lastCol}}) };
+  ws['!freeze'] = { xSplit: "0", ySplit: "1" };
+  ws['!views'] = [{ state: 'frozen', ySplit: 1 }];
+  // 컬럼 너비 적용
+  const widths = [
+    5, 9, 32, 7, 9, 7, 14, 9,                // 기본
+    11, 11, 11, 11,                          // 시총
+    9,9,9,9,9,9,9,9,9,9,9,9,9,              // 분배금 13개월
+    9, 10, 9, 11, 11,                       // 분배 통계
+    10, 13, 13,                             // 가격
+    13, 11, 14, 11, 12,                     // 수익률
+    32, 24, 11                              // 비고 + 신규상장일(맨 끝)
+  ];
+  ws['!cols'] = widths.map(w => ({ wch: w }));
+  // 시트 생성
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "월배당ETF");
+  // 저장
+  const filename = makeXLSXFilename();
+  XLSX.writeFile(wb, filename);
+}
+if (xlsxBtn) {
+  xlsxBtn.onclick = () => {
+    const orig = xlsxBtn.textContent;
+    xlsxBtn.textContent = "📊 저장 중...";
+    xlsxBtn.disabled = true;
+    try {
+      exportXLSX();
+      xlsxBtn.textContent = "✅ 완료";
+    } catch (e) {
+      console.error(e);
+      alert("엑셀 저장 중 오류: " + e.message);
+      xlsxBtn.textContent = orig;
+    }
+    setTimeout(() => { xlsxBtn.textContent = orig; xlsxBtn.disabled = false; }, 1500);
+  };
+}
+
+// 구분4 펼치기/접기 토글 (평소엔 숨김, + 누르면 노출)
+const f4ToggleBtn = document.getElementById("f4ToggleBtn");
+const f4Row = document.getElementById("f4Row");
+let f4Open = false;
+function setF4Open(open){
+  f4Open = open;
+  f4Row.style.display = open ? "" : "none";
+  f4ToggleBtn.textContent = open ? "− 구분4 (세부 분류) 접기" : "＋ 구분4 (세부 분류) 펼치기";
+  f4ToggleBtn.style.borderStyle = open ? "solid" : "dashed";
+  f4ToggleBtn.style.color = open ? "var(--orange)" : "var(--ink2)";
+}
+f4ToggleBtn.onclick = () => setF4Open(!f4Open);
+
+function renderChips(host, opts, set, labelFn) {
+  host.innerHTML = "";
+  opts.forEach(v => {
+    const b = document.createElement("button");
+    b.textContent = labelFn ? labelFn(v) : v;
+    b.dataset.val = v;
+    if (set.has(v)) b.classList.add("on");
+    b.onclick = () => {
+      if (set.has(v)) set.delete(v); else set.add(v);
+      render();
+    };
+    host.appendChild(b);
+  });
+}
+renderChips(document.getElementById("f1"), F1_OPTS, state.f1);
+renderChips(document.getElementById("f2"), F2_OPTS, state.f2);
+renderChips(document.getElementById("f3"), F3_OPTS, state.f3);
+renderChips(document.getElementById("f4"), F4_OPTS, state.f4, f4Label);
+
+document.querySelectorAll(".tabs button").forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll(".tabs button").forEach(x => x.classList.remove("on"));
+    b.classList.add("on");
+    state.when = b.dataset.when;
+    render();
+  };
+});
+
+document.getElementById("q").addEventListener("input", e => {
+  state.q = e.target.value.trim().toLowerCase();
+  render();
+});
+
+document.querySelectorAll("th.sortable").forEach(th => {
+  th.onclick = () => {
+    cycleSort(th.dataset.k);
+    render();
+  };
+});
+// 스택 컬럼의 서브 라벨 클릭으로 주가/TR 등 개별 정렬
+document.querySelectorAll("th .sublbl").forEach(el => {
+  el.onclick = (ev) => {
+    ev.stopPropagation();
+    cycleSort(el.dataset.k);
+    render();
+  };
+});
+
+function fmtNum(n, suf="", dig=0) {
+  if (n == null || n === "" || (typeof n === "number" && isNaN(n))) return "—";
+  if (typeof n !== "number") return n;
+  return n.toLocaleString("ko-KR", { minimumFractionDigits: dig, maximumFractionDigits: dig }) + suf;
+}
+// 시총 전용 포맷터: 4자리 이하는 "X,XXX억원", 5자리 이상은 "X.XX조원"으로 자동 변환
+function fmtMC(n) {
+  if (n == null || isNaN(n)) return "—";
+  const abs = Math.abs(n);
+  const sign = n < 0 ? "-" : "";
+  if (abs >= 10000) {
+    const jo = abs / 10000;
+    let txt;
+    if (jo >= 100) txt = jo.toFixed(0);
+    else if (jo >= 10) txt = jo.toFixed(1);
+    else txt = jo.toFixed(2);
+    return sign + txt + "조원";
+  }
+  return sign + abs.toLocaleString("ko-KR") + "억원";
+}
+function fmtMCSign(n) {
+  if (n == null || isNaN(n)) return "—";
+  const sign = n > 0 ? "▲" : (n < 0 ? "▼" : "");
+  const cls = n > 0 ? "up" : (n < 0 ? "down" : "flat");
+  return `<span class="${cls}">${sign}${fmtMC(Math.abs(n))}</span>`;
+}
+function fmtPct(n, dig=2) {
+  if (n == null) return "—";
+  const sign = n > 0 ? "▲" : (n < 0 ? "▼" : "");
+  const cls = n > 0 ? "up" : (n < 0 ? "down" : "flat");
+  return `<span class="${cls}">${sign}${Math.abs(n).toFixed(dig)}%</span>`;
+}
+function fmtSign(n, suf="원", dig=0) {
+  if (n == null) return "—";
+  const sign = n > 0 ? "▲" : (n < 0 ? "▼" : "");
+  const cls = n > 0 ? "up" : (n < 0 ? "down" : "flat");
+  return `<span class="${cls}">${sign}${Math.abs(n).toLocaleString("ko-KR")}${suf}</span>`;
+}
+
+function passes(e) {
+  if (state.q) {
+    const q = state.q;
+    const hay = (e.nm + " " + e.code + " " + (e.desc||"") + " " + e.c1 + " " + e.c2 + " " + e.c3 + " " + e.c4 + " " + f4Label(e.c4)).toLowerCase();
+    if (!hay.includes(q)) return false;
+  }
+  if (state.when === "mid" && e.dt !== "월중") return false;
+  if (state.when === "end" && e.dt !== "월말") return false;
+  if (state.f1.size && !state.f1.has(e.c1)) return false;
+  if (state.f2.size && !state.f2.has(e.c2)) return false;
+  if (state.f3.size && !state.f3.has(e.c3)) return false;
+  if (state.f4.size && !state.f4.has(e.c4)) return false;
+  return true;
+}
+
+function compare(a, b) {
+  if (!state.sort.k || !state.sort.dir) return 0; // 정렬 해제 = 원래 순서 유지
+  const k = state.sort.k;
+  let av = a[k], bv = b[k];
+  if (k === "nm" || k === "dt") {
+    av = (av||"").toString(); bv = (bv||"").toString();
+    return state.sort.dir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
+  }
+  av = (av == null || isNaN(av)) ? -Infinity : av;
+  bv = (bv == null || isNaN(bv)) ? -Infinity : bv;
+  return state.sort.dir === "asc" ? av - bv : bv - av;
+}
+
+function summarize(list) {
+  const sumMc = list.reduce((s,e) => s + (e.mc2||0), 0);
+  const cnt = list.length;
+  const valid = list.filter(e => e.dr != null);
+  const avgRate = valid.length ? valid.reduce((s,e)=>s+e.dr,0)/valid.length : 0;
+  const validAnn = list.filter(e => e.ax12 != null);
+  const avgAnn = validAnn.length ? validAnn.reduce((s,e)=>s+e.ax12,0)/validAnn.length : 0;
+  const mid = list.filter(e => e.dt === "월중").length;
+  const end = list.filter(e => e.dt === "월말").length;
+  return { cnt, sumMc, avgRate, avgAnn, mid, end };
+}
+
+function renderSummary(list) {
+  const s = summarize(list);
+  const host = document.getElementById("summary");
+  host.innerHTML = `
+    <div class="kpi"><div class="lbl">표시 종목</div><div class="val">${s.cnt}</div><div class="sub">월중 ${s.mid} · 월말 ${s.end}</div></div>
+    <div class="kpi"><div class="lbl">합산 시총</div><div class="val">${fmtMC(s.sumMc)}</div><div class="sub">필터 적용 합계</div></div>
+    <div class="kpi"><div class="lbl">평균 당월 분배율</div><div class="val">${s.avgRate.toFixed(2)}%</div><div class="sub">분배율 평균</div></div>
+    <div class="kpi"><div class="lbl">평균 연간(X12) 예상</div><div class="val">${s.avgAnn.toFixed(2)}%</div><div class="sub">최신분배율 × 12</div></div>
+  `;
+}
+
+function rowHtml(e) {
+  const open = state.expanded.has(e.code);
+  const dtTag = e.dt === "월중"
+    ? `<span class="dt-tag dt-mid">월중 (15일)</span>`
+    : `<span class="dt-tag dt-end">월말 (말일)</span>`;
+  const c1 = `<span class="tag">${e.c1}</span><span class="tag">${e.c2}</span><span class="tag">${e.c3}</span>`;
+  const refDate = getRelevantDate(TODAY, e.dt);
+  const refLabel = fmtDateMD(refDate);
+  const priceCell = e.pr3 != null
+    ? `<div style="line-height:1.3;"><div style="font-weight:700;">${e.pr3.toLocaleString("ko-KR")}원</div><div style="font-size:11px; color:var(--ink2);">${refLabel} 기준</div></div>`
+    : `<div style="color:var(--ink2);">—<div style="font-size:11px;">${refLabel} 기준</div></div>`;
+  return `<tr class="${e.dt === '월중' ? 'midDiv' : ''}" data-code="${e.code}">
+    <td>
+      <div class="nm-cell" data-code="${e.code}">
+        <span class="toggle ${open ? 'open' : ''}">${open ? '−' : '+'}</span>
+        <div class="nm-text">
+          <div class="nm-name">${e.nm}</div>
+          <div class="code">${e.code}</div>
+          <div class="nm-chips">${c1}</div>
+        </div>
+      </div>
+    </td>
+    <td style="text-align:center;">${dtTag}</td>
+    <td class="num">${priceCell}</td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div style="font-weight:800; color:#3a2a1a;">${fmtMC(e.mcCurr)}</div>
+        <div style="font-size:11px; color:var(--ink2);">${refLabel} 기준</div>
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div style="font-weight:700;">${fmtMCSign(e.mcDiff)}</div>
+        <div style="font-size:11.5px;">${fmtPct(e.mcDiffPct)}</div>
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div style="font-weight:700;">${fmtNum(e.divCurr,"원")}</div>
+        <div style="font-size:11.5px;">${fmtSign(e.divDiff,"원")}</div>
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div style="font-weight:700;">${e.dr != null ? e.dr.toFixed(2)+"%" : "—"}</div>
+        <div style="font-size:11.5px; color:var(--orange); font-weight:600;">${e.ax12 != null ? "1년 "+e.ax12.toFixed(2)+"%" : "—"}</div>
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div>${fmtPct(e.retM)}</div>
+        <div style="font-size:11.5px;">${fmtPct(e.retTR)}</div>
+        ${e.retMLst ? `<div style="font-size:9.5px; color:var(--orange); font-weight:700; margin-top:2px;">상장일(${e.lst}) 이후</div>` : ""}
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div>${fmtPct(e.ytd)}</div>
+        <div style="font-size:11.5px;">${fmtPct(e.ytdTR)}</div>
+        ${e.ytdLst ? `<div style="font-size:9.5px; color:var(--orange); font-weight:700; margin-top:2px;">상장일(${e.lst}) 이후</div>` : ""}
+      </div>
+    </td>
+    <td class="num">
+      <div style="line-height:1.3;">
+        <div>${fmtPct(e.y2025)}</div>
+        ${e.y2025Lst === true ? `<div style="font-size:9.5px; color:var(--orange); font-weight:700; margin-top:2px;">상장일(${e.y2025LstDate}) 이후</div>` : ""}
+        ${e.y2025Lst === "before" ? `<div style="font-size:9.5px; color:var(--ink2); font-weight:600; margin-top:2px;">2026 상장</div>` : ""}
+      </div>
+    </td>
+  </tr>`;
+}
+
+function detailHtml(e) {
+  const months = ["25-12","26-1","26-2","26-3","26-4","26-5","26-6","26-7","26-8","26-9","26-10","26-11","26-12"];
+  const monthLabels = ["'25.12","'26.1","'26.2","'26.3","'26.4","'26.5","'26.6","'26.7","'26.8","'26.9","'26.10","'26.11","'26.12"];
+  const latestKey = Object.keys(e.divs||{}).filter(k=>e.divs[k]!=null).pop();
+  const cells = months.map((m,i) => {
+    const v = e.divs && e.divs[m];
+    const isLatest = m === latestKey;
+    const cls = (v==null) ? "empty" : (isLatest ? "this" : "");
+    return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${v==null?"—":v+"원"}</div>`;
+  }).join("");
+  const divCount = Object.values(e.divs||{}).filter(v=>v!=null).length;
+  const sum = Object.values(e.divs||{}).filter(v=>v!=null).reduce((a,b)=>a+b,0);
+  return `<tr class="expand"><td colspan="10">
+    <div class="expand-inner">
+    <div class="detail-grid">
+      <div class="detail-card">
+        <h4>📋 종목 정보</h4>
+        <div class="pair"><span class="k">종목코드</span><span class="v">${e.code}</span></div>
+        <div class="pair"><span class="k">구분</span><span class="v">${e.c1} / ${e.c2} / ${e.c3} / ${f4Label(e.c4)}</span></div>
+        <div class="pair"><span class="k">설명</span><span class="v" style="text-align:right;max-width:60%;">${e.desc||"—"}</span></div>
+        <div class="pair"><span class="k">배당기준일</span><span class="v">${e.dt}</span></div>
+        ${e.note ? `<div class="note">📌 ${e.note}</div>` : ""}
+        ${e.note2 ? `<div class="note">⚠️ ${e.note2}</div>` : ""}
+      </div>
+      <div class="detail-card">
+        <h4>📊 시총 변동 (전월 → 당월)</h4>
+        <div class="pair"><span class="k">전월 시총</span><span class="v">${fmtMC(e.mc1)}</span></div>
+        <div class="pair"><span class="k">당월 시총</span><span class="v">${fmtMC(e.mc2)}</span></div>
+        <div class="pair"><span class="k">증감액</span><span class="v">${fmtMCSign(e.mcDiff)}</span></div>
+        <div class="pair"><span class="k">증감률</span><span class="v">${fmtPct(e.mcDiffPct)}</span></div>
+      </div>
+      <div class="detail-card">
+        <h4>💰 분배율 / 연간예상</h4>
+        <div class="pair"><span class="k">당월 분배율</span><span class="v">${e.dr!=null?e.dr.toFixed(2)+"%":"—"}</span></div>
+        <div class="pair"><span class="k">1년 분배율 (Trailing 12M)</span><span class="v">${e.ax12!=null?e.ax12.toFixed(2)+"%":"—"}</span></div>
+        <div class="pair"><span class="k">연간(예상) 평균기반</span><span class="v">${e.aOther!=null?e.aOther.toFixed(2)+"%":"—"}</span></div>
+        <div class="pair"><span class="k">평균 분배금</span><span class="v">${fmtNum(e.avg,"원")}</span></div>
+        <div class="pair"><span class="k">분배금 누적</span><span class="v">${fmtNum(sum,"원")} (${divCount}개월)</span></div>
+      </div>
+      <div class="detail-card">
+        <h4>📈 수익률 ${e.lst ? `<span style="color:var(--orange); font-size:11px; font-weight:700;">· 2026년 ${e.lst} 신규상장</span>` : ""}</h4>
+        <div class="pair"><span class="k">당월(분배일) 주가수익률</span><span class="v">${fmtPct(e.retM)}${e.retMLst ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일 이후]</span>' : ''}</span></div>
+        <div class="pair"><span class="k">당월 TR (분배 포함)</span><span class="v">${fmtPct(e.retTR)}</span></div>
+        <div class="pair"><span class="k">전월 총수익률</span><span class="v">${fmtPct(e.retPrev)}</span></div>
+        <div class="pair"><span class="k">올해 주가상승률</span><span class="v">${fmtPct(e.ytd)}${e.ytdLst ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일 이후]</span>' : ''}</span></div>
+        <div class="pair"><span class="k">올해 TR</span><span class="v">${fmtPct(e.ytdTR)}</span></div>
+        <div class="pair"><span class="k">2025년도 TR</span><span class="v">${fmtPct(e.y2025)}${e.y2025Lst === true ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일('+e.y2025LstDate+') 이후]</span>' : ''}${e.y2025Lst === "before" ? ' <span style="color:var(--ink2); font-size:10px;">[2026 상장]</span>' : ''}</span></div>
+      </div>
+      <div class="chart-card full-row">
+        <div class="chart-card-header">
+          <h4>📈 주가 차트 <span style="color:var(--ink2); font-weight:500; font-size:12px;">· ${e.code}</span></h4>
+          <div class="chart-period-tabs" data-code="${e.code}">
+            <button data-period="1W" type="button">1주</button>
+            <button data-period="1M" class="on" type="button">1달</button>
+            <button data-period="6M" type="button">6달</button>
+            <button data-period="1Y" type="button">1년</button>
+            <button data-period="ALL" type="button">전체</button>
+          </div>
+        </div>
+        <div class="chart-canvas-wrap">
+          <div class="chart-loading" id="chart-loading-${e.code}">📈 차트 로딩 중...</div>
+          <canvas id="chart-canvas-${e.code}" style="display:none;"></canvas>
+        </div>
+      </div>
+      <div class="detail-card full-row">
+        <h4>📅 월별 분배금 (12개월)</h4>
+        <div class="divbar">${cells}</div>
+      </div>
+    </div>
+    </div>
+  </td></tr>`;
+}
+
+function render() {
+  const tbody = document.getElementById("tbody");
+  const list = ETFS.filter(passes).sort(compare);
+  document.getElementById("cntFiltered").textContent = list.length;
+  document.getElementById("cntTotal").textContent = ETFS.length;
+
+  // sort indicator (단일 컬럼)
+  document.querySelectorAll("th.sortable").forEach(th => {
+    const arr = th.querySelector(".arr");
+    if (arr) arr.remove();
+    if (th.dataset.k === state.sort.k) {
+      const span = document.createElement("span");
+      span.className = "arr";
+      span.textContent = state.sort.dir === "asc" ? "▲" : "▼";
+      th.appendChild(span);
+    }
+  });
+  // sub-label active state (스택 컬럼)
+  document.querySelectorAll("th .sublbl").forEach(el => {
+    const existing = el.querySelector(".arr");
+    if (existing) existing.remove();
+    if (el.dataset.k === state.sort.k) {
+      el.classList.add("on");
+      const span = document.createElement("span");
+      span.className = "arr";
+      span.textContent = state.sort.dir === "asc" ? "▲" : "▼";
+      el.appendChild(span);
+    } else {
+      el.classList.remove("on");
+    }
+  });
+
+  // chips active state
+  [["f1",F1_OPTS,state.f1],["f2",F2_OPTS,state.f2],["f3",F3_OPTS,state.f3],["f4",F4_OPTS,state.f4]].forEach(([id,opts,set])=>{
+    const host = document.getElementById(id);
+    Array.from(host.querySelectorAll("button")).forEach(b => {
+      const val = b.dataset.val || b.textContent;
+      if (set.has(val)) b.classList.add("on"); else b.classList.remove("on");
+    });
+  });
+  // 구분4 선택 상태 요약 (접혀 있어도 몇 개 켜졌는지 보이게)
+  const f4Active = document.getElementById("f4Active");
+  if (f4Active) {
+    if (state.f4.size > 0) {
+      const labels = Array.from(state.f4).map(f4Label).join(", ");
+      f4Active.textContent = `· ${state.f4.size}개 선택됨 (${labels})`;
+    } else {
+      f4Active.textContent = "";
+    }
+  }
+
+  renderSummary(list);
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state">조건에 맞는 종목이 없습니다.</div></td></tr>`;
+    return;
+  }
+  let html = "";
+  list.forEach(e => {
+    html += rowHtml(e);
+    if (state.expanded.has(e.code)) html += detailHtml(e);
+  });
+  tbody.innerHTML = html;
+
+  // bind toggles
+  tbody.querySelectorAll(".nm-cell").forEach(c => {
+    c.onclick = () => {
+      const code = c.dataset.code;
+      if (state.expanded.has(code)) state.expanded.delete(code);
+      else state.expanded.add(code);
+      render();
+    };
+  });
+  // Bind chart period tabs + auto-load chart for expanded rows
+  tbody.querySelectorAll(".chart-period-tabs").forEach(group => {
+    const code = group.dataset.code;
+    group.querySelectorAll("button").forEach(b => {
+      b.onclick = () => {
+        group.querySelectorAll("button").forEach(x => x.classList.remove("on"));
+        b.classList.add("on");
+        loadAndRenderChart(code, b.dataset.period);
+      };
+    });
+    // 자동 로드 (펼쳐졌을 때)
+    loadAndRenderChart(code, "1M");
+  });
+}
+
+// ==== 주가 차트 (Chart.js + Naver Finance API) =================================
+const chartDataCache = {};   // code -> 일별 시세 array
+const chartInstances = {};   // code -> Chart instance
+
+function ymdNoSep(d) {
+  return d.getFullYear() + String(d.getMonth()+1).padStart(2,"0") + String(d.getDate()).padStart(2,"0");
+}
+async function fetchChartData(code) {
+  if (chartDataCache[code]) return chartDataCache[code];
+  const today = new Date();
+  const start = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
+  const naverUrl = `https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=${ymdNoSep(start)}&endTime=${ymdNoSep(today)}&timeframe=day`;
+  // CORS 우회용 프록시들 (직접 fetch 실패 시 순차 시도)
+  const candidates = [
+    naverUrl,
+    "https://corsproxy.io/?" + encodeURIComponent(naverUrl),
+    "https://api.allorigins.win/raw?url=" + encodeURIComponent(naverUrl),
+  ];
+  let lastErr = null;
+  for (const url of candidates) {
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) { lastErr = new Error("HTTP " + resp.status); continue; }
+      let text = await resp.text();
+      text = text.replace(/'/g, '"');
+      const parsed = JSON.parse(text);
+      if (!Array.isArray(parsed) || parsed.length < 2) { lastErr = new Error("데이터 없음"); continue; }
+      const rows = parsed.slice(1).map(r => ({ date: String(r[0]), close: r[4] }));
+      chartDataCache[code] = rows;
+      return rows;
+    } catch (e) {
+      lastErr = e;
+    }
+  }
+  throw lastErr || new Error("모든 fetch 실패");
+}
+
+function filterByPeriod(rows, period) {
+  if (period === "ALL") return rows;
+  const days = { "1W": 7, "1M": 30, "6M": 183, "1Y": 365 }[period] || 30;
+  return rows.slice(-Math.min(rows.length, Math.ceil(days * 0.7)));  // 영업일 기준 약 70%
+}
+
+async function loadAndRenderChart(code, period) {
+  const loadingEl = document.getElementById("chart-loading-" + code);
+  const canvasEl = document.getElementById("chart-canvas-" + code);
+  if (!canvasEl) return;
+  try {
+    if (loadingEl) {
+      loadingEl.style.display = "flex";
+      loadingEl.textContent = "📈 차트 로딩 중...";
+    }
+    canvasEl.style.display = "none";
+    const rows = await fetchChartData(code);
+    const filtered = filterByPeriod(rows, period);
+    if (!filtered.length) throw new Error("기간 내 데이터 없음");
+    // Format dates for chart (M/D)
+    const labels = filtered.map(r => {
+      const s = r.date;
+      return s.substring(4,6).replace(/^0/,"") + "/" + s.substring(6,8).replace(/^0/,"");
+    });
+    const prices = filtered.map(r => r.close);
+    // Destroy previous instance
+    if (chartInstances[code]) { chartInstances[code].destroy(); }
+    if (loadingEl) loadingEl.style.display = "none";
+    canvasEl.style.display = "block";
+    const ctx = canvasEl.getContext("2d");
+    chartInstances[code] = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: code + " 종가",
+          data: prices,
+          borderColor: "#e87b1a",
+          backgroundColor: "rgba(232,123,26,0.1)",
+          fill: true,
+          tension: 0.25,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: { mode: "index", intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => ctx.parsed.y.toLocaleString("ko-KR") + "원"
+            }
+          }
+        },
+        scales: {
+          x: {
+            ticks: { font: { size: 10 }, maxRotation: 0, autoSkipPadding: 20 },
+            grid: { display: false }
+          },
+          y: {
+            ticks: {
+              font: { size: 10 },
+              callback: (v) => v.toLocaleString("ko-KR")
+            },
+            grid: { color: "rgba(120,80,30,0.06)" }
+          }
+        }
+      }
+    });
+  } catch (e) {
+    if (loadingEl) {
+      loadingEl.style.display = "flex";
+      loadingEl.innerHTML = `<div style="color:var(--ink2); text-align:center; line-height:1.5;">
+        <div>차트를 불러오지 못했습니다 (${e.message || "네트워크 오류"})</div>
+        <div style="margin-top:6px; font-size:11.5px;">
+          📌 로컬 파일(file://)에서 열면 보안 정책으로 차트 fetch가 막힙니다.<br>
+          <b>로컬 웹서버</b>에서 열거나 <b>GitHub Pages</b>에 올린 후 사용해주세요.<br>
+          (간단한 로컬 서버: 폴더에서 <code>python -m http.server 8000</code> 실행 → <code>http://localhost:8000</code>)
+        </div>
+      </div>`;
+    }
+    canvasEl.style.display = "none";
+  }
+}
+render();
+</script>
+</body>
+</html>
