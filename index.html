@@ -133,6 +133,21 @@ header.top .badge {
 .kpi .val { font-size: 22px; font-weight: 800; color: #3a2a1a; margin-top: 4px;}
 .kpi .sub { color: var(--ink2); font-size: 12.5px; margin-top: 3px; }
 
+.link-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 12px; border-radius: 10px;
+  text-decoration: none;
+  font-weight: 700; font-size: 13.5px;
+  box-shadow: var(--shadow);
+  transition: transform .15s, box-shadow .15s;
+  border: 1px solid rgba(0,0,0,0.06);
+}
+.link-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(120,80,30,0.15); }
+.link-btn.yt { background: #FF0000; color: #fff; }
+.link-btn.naver { background: #03C75A; color: #fff; }
+.link-btn svg { display: block; flex-shrink: 0; }
+.link-btn .link-label { white-space: nowrap; }
+
 .macro-section {
   margin-bottom: 14px;
 }
@@ -503,6 +518,20 @@ footer {
       <div class="sub">분배기준일에 맞춰 월중·월말 ETF를 분리해서 보여줍니다. 종목명을 누르면 월별 분배금·수익률·시총 변화를 확인할 수 있어요.</div>
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+      <a href="https://www.youtube.com/@ttok_jae" target="_blank" rel="noopener" class="link-btn yt" title="똑재TV 유튜브 채널">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#fff" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
+          <path fill="#FF0000" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="link-label">똑재TV</span>
+      </a>
+      <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="link-btn naver" title="부의 자유 네이버 카페">
+        <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+          <rect width="24" height="24" rx="4" fill="#03C75A"/>
+          <path fill="#fff" d="M14.93 5h3.07v14h-3.07L9.07 12.06V19H6V5h3.07L14.93 11.94z"/>
+        </svg>
+        <span class="link-label">부의 자유 카페</span>
+      </a>
       <button id="xlsxBtn" type="button" title="168개 전체 데이터를 엑셀(XLSX) 파일로 저장 — 자동필터 켜져있음" style="background:#1d6f42; color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);">📊 엑셀 저장</button>
       <div class="cnt"><b id="cntFiltered">0</b> / <span id="cntTotal">0</span> 종목 표시</div>
     </div>
@@ -1754,10 +1783,22 @@ async function loadAndRenderChart(code, period) {
     const rows = await fetchChartData(code);
     const filtered = filterByPeriod(rows, period);
     if (!filtered.length) throw new Error("기간 내 데이터 없음");
-    // Format dates for chart (M/D)
+    // 기간별 X축 라벨 포맷 (긴 기간은 연도 포함)
+    const useYear = (period === "1Y" || period === "ALL");
+    const useFullYear = (period === "ALL");
     const labels = filtered.map(r => {
       const s = r.date;
-      return s.substring(4,6).replace(/^0/,"") + "/" + s.substring(6,8).replace(/^0/,"");
+      const y = s.substring(0,4);
+      const m = String(parseInt(s.substring(4,6)));
+      const d = String(parseInt(s.substring(6,8)));
+      if (useFullYear) return y + ". " + m;        // ALL: "2023. 5"
+      if (useYear) return y.substring(2) + "." + m;  // 1Y: "25.5"
+      return m + "/" + d;                            // 1W/1M/6M: "5/3"
+    });
+    // Tooltip용 풀 날짜 (YYYY-MM-DD)
+    const fullDates = filtered.map(r => {
+      const s = r.date;
+      return s.substring(0,4) + "-" + s.substring(4,6) + "-" + s.substring(6,8);
     });
     const prices = filtered.map(r => r.close);
     // Destroy previous instance
@@ -1789,13 +1830,20 @@ async function loadAndRenderChart(code, period) {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => ctx.parsed.y.toLocaleString("ko-KR") + "원"
+              title: (items) => fullDates[items[0].dataIndex] || items[0].label,
+              label: (ctx) => "종가: " + ctx.parsed.y.toLocaleString("ko-KR") + "원"
             }
           }
         },
         scales: {
           x: {
-            ticks: { font: { size: 10 }, maxRotation: 0, autoSkipPadding: 20 },
+            ticks: {
+              font: { size: 10 },
+              maxRotation: 0,
+              autoSkip: true,
+              autoSkipPadding: useFullYear ? 30 : 20,
+              maxTicksLimit: useFullYear ? 12 : (useYear ? 12 : 10)
+            },
             grid: { display: false }
           },
           y: {
