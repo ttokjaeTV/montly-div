@@ -151,6 +151,37 @@ header.top .badge {
 .macro-section {
   margin-bottom: 14px;
 }
+.macro-toggle-wrap {
+  margin-bottom: 14px;
+}
+.macro-toggle {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 16px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: 15px; font-weight: 700; color: #5a4530;
+  transition: background 0.15s;
+}
+.macro-toggle:hover { background: #fff1d9; }
+.macro-toggle[aria-expanded="true"] {
+  background: #fff1d9;
+  border-bottom-left-radius: 0; border-bottom-right-radius: 0;
+  margin-bottom: 0;
+}
+.macro-toggle-caret {
+  font-size: 12px; color: var(--orange);
+  transition: transform 0.2s;
+}
+.macro-toggle[aria-expanded="true"] .macro-toggle-caret { transform: rotate(180deg); }
+.macro-toggle[aria-expanded="true"] + .macro-section {
+  border: 1px solid var(--line); border-top: 0;
+  border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;
+  padding: 12px;
+  margin-bottom: 0;
+}
 .macro-table-wrap {
   background: var(--bg2);
   border: 1px solid var(--line);
@@ -346,10 +377,11 @@ table.dt tbody tr.expand td {
 }
 .detail-card .pair {
   display:flex; justify-content:space-between; padding: 4px 0;
-  font-size: 13.5px;
+  font-size: 13.5px; gap: 12px;
 }
-.detail-card .pair .k { color: var(--ink2); }
-.detail-card .pair .v { font-weight: 700; }
+.detail-card .pair .k { color: var(--ink2); word-break: keep-all; white-space: nowrap; flex-shrink: 0; }
+.detail-card .pair .v { font-weight: 700; word-break: keep-all; line-height: 1.4; }
+.detail-card .note { word-break: keep-all; line-height: 1.5; }
 .divbar {
   display:grid; grid-template-columns: repeat(13, 1fr); gap: 4px; margin-top:8px;
 }
@@ -580,7 +612,13 @@ footer {
 
   <div class="summary" id="summary"></div>
 
-  <div id="macroSection" class="macro-section"></div>
+  <div class="macro-toggle-wrap">
+    <button id="macroToggle" class="macro-toggle" type="button" aria-expanded="false" onclick="toggleMacroSection()">
+      <span class="macro-toggle-label">📈 거시경제 지표 비교 보기</span>
+      <span class="macro-toggle-caret">▼</span>
+    </button>
+    <div id="macroSection" class="macro-section" style="display:none;"></div>
+  </div>
 
   <div class="tableWrap">
     <div class="tableScroll">
@@ -622,29 +660,79 @@ footer {
 //  note, note2]
 const HEADERS = ["c1","c2","c3","c4","code","nm","desc","dt","mc1","mc2","divs","avg","dr","ax12","aOther","pr1","pr2","pr3","retM","retPrev","retTR","ytd","y2025","ytdTR","note","note2"];
 
-// 분배 기준일 자동 계산 (오늘 날짜 기준)
-function getRelevantDate(today, type) {
-  const y = today.getFullYear();
-  const m = today.getMonth(); // 0-indexed
-  const d = today.getDate();
-  const m1 = m + 1; // 1-indexed
-  const refDay = (type === "월중") ? 13 : 28;
-  if (d >= refDay) {
-    return { y, m: m1, d: refDay };
-  } else {
-    let pm = m1 - 1, py = y;
-    if (pm === 0) { pm = 12; py = y - 1; }
-    return { y: py, m: pm, d: refDay };
+// === 한국 공휴일 (매년 신규 갱신 필요) ===
+// 2026년 기준. 토요일/일요일은 자동 처리되므로 평일에 해당하는 공휴일과 대체공휴일만 등록
+const KR_HOLIDAYS = new Set([
+  "2026-01-01",  // 신정
+  "2026-02-16","2026-02-17","2026-02-18",  // 설날 연휴
+  "2026-03-02",  // 삼일절(일) 대체공휴일
+  "2026-05-05",  // 어린이날
+  "2026-05-25",  // 부처님오신날(일) 대체공휴일
+  "2026-08-17",  // 광복절(토) 대체공휴일
+  "2026-09-24","2026-09-25","2026-09-26",  // 추석 연휴
+  "2026-10-05",  // 개천절(토) 대체공휴일
+  "2026-10-09",  // 한글날
+  "2026-12-25"   // 크리스마스
+]);
+
+function ymdStr(d) {
+  return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,'0') + "-" + String(d.getDate()).padStart(2,'0');
+}
+function isHoliday(date) {
+  const day = date.getDay();
+  if (day === 0 || day === 6) return true;  // 일/토 주말
+  return KR_HOLIDAYS.has(ymdStr(date));
+}
+
+// 분배공시일 자동 계산
+// 분배기준일(15일 또는 말일)이 주말/공휴일이면 직전 영업일로 당김.
+// 분배공시일 = 분배기준일 -2 영업일.
+function getDisclosureDate(year, month, baseDay) {
+  // baseDay: 15(월중) 또는 31(월말 = 그 달 마지막날 자동 계산)
+  let day = (baseDay === 31) ? new Date(year, month, 0).getDate() : baseDay;
+  let base = new Date(year, month - 1, day);
+  while (isHoliday(base)) base.setDate(base.getDate() - 1);
+  // -2 영업일
+  let disc = new Date(base);
+  let n = 2;
+  while (n > 0) {
+    disc.setDate(disc.getDate() - 1);
+    if (!isHoliday(disc)) n--;
   }
+  return disc;
+}
+
+// 가장 최근 분배공시일 반환 (오늘 이전, today < disc 면 후보 제외)
+// type 동작:
+//   - 미지정: 월중·월말 중 더 최근 (통일 baseline) — 시총 등
+//   - "월중" / "월말": 해당 사이클의 가장 최근 — 분배금 공시일 종가/분배율
+function getRelevantDate(today, type) {
+  const ty = today.getFullYear(), tm = today.getMonth() + 1;
+  const candidates = [];
+  for (let i = 0; i < 3; i++) {
+    let y = ty, m = tm - i;
+    while (m <= 0) { m += 12; y -= 1; }
+    if (type !== "월말") {
+      const d = getDisclosureDate(y, m, 15);
+      if (d < today) candidates.push(d);
+    }
+    if (type !== "월중") {
+      const d = getDisclosureDate(y, m, 31);
+      if (d < today) candidates.push(d);
+    }
+  }
+  if (candidates.length === 0) return null;
+  candidates.sort((a, b) => b - a);  // 최신 순
+  const top = candidates[0];
+  return { y: top.getFullYear(), m: top.getMonth() + 1, d: top.getDate() };
 }
 function fmtDateMD(dt) { return `${dt.m}/${dt.d}`; }
 function getLatestPeriodLabel(today) {
-  const m = today.getMonth(), d = today.getDate(), m1 = m + 1, y = today.getFullYear();
-  if (d >= 28) return `${y}년 ${m1}월 28일 종가 기준 (마지막 = 월말 분배)`;
-  if (d >= 13) return `${y}년 ${m1}월 13일 종가 기준 (마지막 = 월중 분배)`;
-  let pm = m1 - 1, py = y;
-  if (pm === 0) { pm = 12; py = y - 1; }
-  return `${py}년 ${pm}월 28일 종가 기준 (마지막 = 월말 분배)`;
+  const r = getRelevantDate(today);
+  if (!r) return "데이터 없음";
+  // 분배기준일이 15일 근처(±5일)면 월중, 28일 근처(말일 ±5일)면 월말로 판단
+  const cycle = (r.d <= 18) ? "월중" : "월말";
+  return `${r.y}년 ${r.m}월 ${r.d}일 종가 기준 (마지막 = ${cycle} 분배)`;
 }
 const TODAY = new Date();
 const PERIOD_LABEL = getLatestPeriodLabel(TODAY);
@@ -672,38 +760,61 @@ function getMacroDateKeys(today) {
   function ymd(yr, mo, da) {
     return yr + "-" + String(mo).padStart(2,"0") + "-" + String(da).padStart(2,"0");
   }
-  // 분배공시일 D-2 매핑: 월말=27 또는 28, 월중=11 또는 13
-  // 이번달 baseline 결정
-  let curr, prev, currType;
-  if (d >= 28) {
-    // 28일 이후: 월말 사이클 - curr=이번달 28
-    curr = ymd(y, m, 28);
-    let pm = m - 1, py = y;
-    if (pm === 0) { pm = 12; py = y - 1; }
-    prev = ymd(py, pm, 28);  // 1달 전 월말
-    if (!MACRO_DATA[prev]) prev = ymd(py, pm, 27);  // 27일 fallback
-    currType = "월말";
-  } else if (d >= 13) {
-    curr = ymd(y, m, 13);
-    let pm = m - 1, py = y;
-    if (pm === 0) { pm = 12; py = y - 1; }
-    prev = ymd(py, pm, 13);
-    if (!MACRO_DATA[prev]) prev = ymd(py, pm, 11);
-    currType = "월중";
-  } else {
-    // 1~12일: 지난달 28일이 마지막 baseline
-    let pm = m - 1, py = y;
-    if (pm === 0) { pm = 12; py = y - 1; }
-    curr = ymd(py, pm, 28);
-    if (!MACRO_DATA[curr]) curr = ymd(py, pm, 27);
-    let ppm = pm - 1, ppy = py;
-    if (ppm === 0) { ppm = 12; ppy = py - 1; }
-    prev = ymd(ppy, ppm, 28);
-    if (!MACRO_DATA[prev]) prev = ymd(ppy, ppm, 27);
-    if (!MACRO_DATA[prev]) prev = ymd(ppy, ppm, 25);  // 2/25 같은 케이스
-    currType = "월말";
+  // 정확한 분배공시일 자동 계산 (주말/공휴일 고려)
+  function findEnd(yr, mo) {
+    const dt = getDisclosureDate(yr, mo, 31);
+    const k = ymdStr(dt);
+    return MACRO_DATA[k] ? k : null;
   }
-  return { yearStart: ymd(y, 1, 2), prev, curr, currType };
+  function findMid(yr, mo) {
+    const dt = getDisclosureDate(yr, mo, 15);
+    const k = ymdStr(dt);
+    return MACRO_DATA[k] ? k : null;
+  }
+  function prevMonth(yr, mo) {
+    let pm = mo - 1, py = yr;
+    if (pm === 0) { pm = 12; py = yr - 1; }
+    return [py, pm];
+  }
+
+  // 월말 baseline 쌍: 이번달 분배공시일이 today 이전이면 이번달, 아니면 전월
+  let currEnd, prevEnd;
+  {
+    const thisEndDate = getDisclosureDate(y, m, 31);
+    if (thisEndDate < today) {
+      currEnd = findEnd(y, m);
+      const [py, pm] = prevMonth(y, m);
+      prevEnd = findEnd(py, pm);
+    } else {
+      const [py, pm] = prevMonth(y, m);
+      currEnd = findEnd(py, pm);
+      const [ppy, ppm] = prevMonth(py, pm);
+      prevEnd = findEnd(ppy, ppm);
+    }
+  }
+
+  // 월중 baseline 쌍
+  let currMid, prevMid;
+  {
+    const thisMidDate = getDisclosureDate(y, m, 15);
+    if (thisMidDate < today) {
+      currMid = findMid(y, m);
+      const [py, pm] = prevMonth(y, m);
+      prevMid = findMid(py, pm);
+    } else {
+      const [py, pm] = prevMonth(y, m);
+      currMid = findMid(py, pm);
+      const [ppy, ppm] = prevMonth(py, pm);
+      prevMid = findMid(ppy, ppm);
+    }
+  }
+
+  // YTD 계산용 최신 baseline (월말/월중 중 더 최근 것)
+  let curr = null;
+  if (currEnd && currMid) curr = currEnd > currMid ? currEnd : currMid;
+  else curr = currEnd || currMid;
+
+  return { yearStart: ymd(y, 1, 2), prevEnd, currEnd, prevMid, currMid, curr };
 }
 
 // 거시지표 한 줄 (date 라벨 + 13개 지표 값) 렌더
@@ -739,7 +850,6 @@ function renderMacroSection() {
   if (!host) return;
   const keys = getMacroDateKeys(TODAY);
   const dataYS = MACRO_DATA[keys.yearStart] || null;
-  const dataPrev = MACRO_DATA[keys.prev] || null;
   const dataCurr = MACRO_DATA[keys.curr] || null;
   if (!dataCurr) {
     host.innerHTML = `<div class="macro-table-wrap" style="color:var(--ink2); font-size:12.5px;">📊 거시경제 지표 데이터 없음 (${keys.curr} 입력 필요)</div>`;
@@ -749,14 +859,15 @@ function renderMacroSection() {
     if (a == null || b == null) return null;
     return +((b - a) / a * 100).toFixed(2);
   }
-  const ytdPcts = dataYS ? dataYS.map((v, i) => pct(v, dataCurr[i])) : MACRO_LABELS.map(() => null);
-  const monthPcts = dataPrev ? dataPrev.map((v, i) => pct(v, dataCurr[i])) : MACRO_LABELS.map(() => null);
+  function shortFull(s) { return s.replace(/-/g,"/").replace(/^2026\//,""); }
+  function shortMD(s) { return s.substring(5).replace("-","/"); }
 
   const headerCells = MACRO_LABELS.map(l => `<th>${l}</th>`).join("");
   const headerRow = `<thead><tr><th>구분</th>${headerCells}<th>비고</th></tr></thead>`;
 
-  const ytdLabel = `${keys.yearStart.replace(/-/g,"/").replace(/^2026\//,"")} → ${keys.curr.replace(/-/g,"/").replace(/^2026\//,"")}`;
-  const monthLabel = `${keys.prev.replace(/-/g,"/").replace(/^2026\//,"")} → ${keys.curr.replace(/-/g,"/").replace(/^2026\//,"")}`;
+  // 1. 올해 수익률 비교 (연초 → 가장 최신 baseline)
+  const ytdPcts = dataYS ? dataYS.map((v, i) => pct(v, dataCurr[i])) : MACRO_LABELS.map(() => null);
+  const ytdLabel = `${shortFull(keys.yearStart)} → ${shortFull(keys.curr)}`;
 
   let html = `
     <div class="macro-table-wrap">
@@ -764,27 +875,73 @@ function renderMacroSection() {
       <table class="macro">
         ${headerRow}
         <tbody>
-          ${macroRowHtml(keys.yearStart.substring(5).replace("-","/"), dataYS, false)}
-          ${macroRowHtml(keys.curr.substring(5).replace("-","/"), dataCurr, false)}
+          ${macroRowHtml(shortMD(keys.yearStart), dataYS, false)}
+          ${macroRowHtml(shortMD(keys.curr), dataCurr, false)}
           ${macroRowHtml("증감율", ytdPcts, true, { cls:"row-pct", note:"올해 수익률", noteClass:"label-ytd" })}
         </tbody>
       </table>
-    </div>
+    </div>`;
+
+  // 2. 최근 한달 비교 (월중 사이클) — 월중 분배 ETF 해석용
+  const dataPrevMid = MACRO_DATA[keys.prevMid] || null;
+  const dataCurrMid = MACRO_DATA[keys.currMid] || null;
+  if (dataPrevMid && dataCurrMid) {
+    const midPcts = dataPrevMid.map((v, i) => pct(v, dataCurrMid[i]));
+    const midLabel = `${shortFull(keys.prevMid)} → ${shortFull(keys.currMid)}`;
+    html += `
     <div class="macro-table-wrap">
-      <h4>📉 최근 한달 비교 <span style="color:var(--ink2); font-weight:500;">· ${monthLabel}</span></h4>
+      <h4>📉 최근 한달 비교 <span style="color:#2a78c8; font-weight:700; font-size:12px; background:#dcecff; padding:2px 8px; border-radius:6px; margin-left:6px;">월중 사이클</span> <span style="color:var(--ink2); font-weight:500;">· ${midLabel}</span></h4>
       <table class="macro">
         ${headerRow}
         <tbody>
-          ${macroRowHtml(keys.prev.substring(5).replace("-","/"), dataPrev, false)}
-          ${macroRowHtml(keys.curr.substring(5).replace("-","/"), dataCurr, false)}
-          ${macroRowHtml("증감율", monthPcts, true, { cls:"row-pct", note:"최근 한달 수익률", noteClass:"label-month" })}
+          ${macroRowHtml(shortMD(keys.prevMid), dataPrevMid, false)}
+          ${macroRowHtml(shortMD(keys.currMid), dataCurrMid, false)}
+          ${macroRowHtml("증감율", midPcts, true, { cls:"row-pct", note:"월중 분배 ETF 해석용", noteClass:"label-month" })}
         </tbody>
       </table>
-    </div>
-  `;
+    </div>`;
+  }
+
+  // 3. 최근 한달 비교 (월말 사이클) — 월말 분배 ETF 해석용
+  const dataPrevEnd = MACRO_DATA[keys.prevEnd] || null;
+  const dataCurrEnd = MACRO_DATA[keys.currEnd] || null;
+  if (dataPrevEnd && dataCurrEnd) {
+    const endPcts = dataPrevEnd.map((v, i) => pct(v, dataCurrEnd[i]));
+    const endLabel = `${shortFull(keys.prevEnd)} → ${shortFull(keys.currEnd)}`;
+    html += `
+    <div class="macro-table-wrap">
+      <h4>📉 최근 한달 비교 <span style="color:var(--orange); font-weight:700; font-size:12px; background:#fff1d9; padding:2px 8px; border-radius:6px; margin-left:6px;">월말 사이클</span> <span style="color:var(--ink2); font-weight:500;">· ${endLabel}</span></h4>
+      <table class="macro">
+        ${headerRow}
+        <tbody>
+          ${macroRowHtml(shortMD(keys.prevEnd), dataPrevEnd, false)}
+          ${macroRowHtml(shortMD(keys.currEnd), dataCurrEnd, false)}
+          ${macroRowHtml("증감율", endPcts, true, { cls:"row-pct", note:"월말 분배 ETF 해석용", noteClass:"label-month" })}
+        </tbody>
+      </table>
+    </div>`;
+  }
+
   host.innerHTML = html;
 }
 renderMacroSection();
+
+function toggleMacroSection() {
+  const btn = document.getElementById("macroToggle");
+  const sec = document.getElementById("macroSection");
+  const lbl = btn.querySelector(".macro-toggle-label");
+  if (!btn || !sec) return;
+  const open = btn.getAttribute("aria-expanded") === "true";
+  if (open) {
+    btn.setAttribute("aria-expanded", "false");
+    sec.style.display = "none";
+    lbl.textContent = "📈 거시경제 지표 비교 보기";
+  } else {
+    btn.setAttribute("aria-expanded", "true");
+    sec.style.display = "";
+    lbl.textContent = "📈 거시경제 지표 비교 (접기)";
+  }
+}
 
 const RAW = [
 ["주식","배당","국내","국내배당","091170","KODEX 은행","국내 대표 금융지주회사 및 은행 10개 (시가총액 가중방식)","월말",5223,4812,{"25-12":45,"26-1":45,"26-2":50,"26-3":52},49,0.35,4.25,4.66,12625,16890,14695,-13.00,23.90,-12.64,16.40,62.45,17.56,"(기존)분기→2024/08부터 월분배",""],
@@ -957,50 +1114,51 @@ const RAW = [
 ["주식","커버드콜","국내","국테크커","0177R0","TIGER 반도체TOP10커버드콜액티브","국내 반도체 TOP10 + 커버드콜 (국내테크 카테고리 신규)","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/4 신규상장",""]
 ];
 
-// 4월 분배공시일 종가 일괄 업데이트 (2026년 4월 30일 수집)
-// 각 ETF의 [pr1=1/2(또는 상장일), pr2=전월 분배공시일(월중=3/11, 월말=3/27), pr3=당월 분배공시일(월중=4/13, 월말=4/28)]
+// 분배공시일 종가 일괄 업데이트 (2026년 5월 1일 — baseline 통일)
+// 모든 ETF 통일 baseline: [pr1=1/2(또는 상장일), pr2=3/27, pr3=4/28]
+// 가장 최근 분배공시일(4/28) 기준으로 월중/월말 ETF 직접 비교 가능
 const PRICE_UPDATES = {
-"091170":[12503,15130,15890],"104530":[15322,19581,19990],"136340":[105314,104210,104685],"153130":[112586,113005,113225],
+"091170":[12503,15130,15890],"104530":[15322,19621,21050],"136340":[105314,104210,104685],"153130":[112586,113065,113315],
 "161510":[20968,25925,27685],"166400":[17364,19370,22690],"181480":[78973,78460,84455],"182480":[12241,12585,13500],
-"211900":[21745,28700,31400],"214980":[113912,114425,114615],"237370":[14472,15830,15860],"245340":[33795,33870,35225],
-"251600":[14197,15635,16160],"273140":[113862,114375,114635],"279530":[13795,17615,18590],"284430":[17096,19610,20065],
+"211900":[21745,28700,31400],"214980":[113912,114415,114735],"237370":[14472,15715,16210],"245340":[33795,33870,35225],
+"251600":[14197,15635,16160],"273140":[113862,114505,114775],"279530":[13795,17615,18590],"284430":[17096,19435,21170],
 "289480":[9515,10280,11540],"290080":[8296,8415,8375],"316300":[14505,14240,14260],"322410":[18367,22650,24365],
-"329200":[4397,4610,4925],"329650":[14225,14340,14405],"329660":[17495,17635,17815],"329670":[21125,21510,21775],
+"329200":[4397,4610,4925],"329650":[14225,14200,14455],"329660":[17495,17425,18030],"329670":[21125,21205,22180],
 "332610":[130660,137120,134690],"332620":[96249,98530,98260],"336160":[101525,100525,100980],"341850":[4840,4985,5245],
-"352540":[12640,12195,11895],"352560":[11397,11405,12285],"373790":[15572,16625,16225],"402970":[12773,14560,14695],
+"352540":[12640,12195,11895],"352560":[11397,11405,12285],"373790":[15572,16625,16225],"402970":[12773,14979,14840],
 "423160":[109971,110630,110865],"429000":[12757,13495,13515],"429740":[6970,7095,7670],"432840":[18478,18290,19640],
 "433330":[20538,20385,21890],"437070":[62820,65385,64575],"437080":[99964,98835,99740],"440340":[11759,12755,12565],
-"441640":[12230,12760,12850],"441680":[10640,11060,11420],"441800":[19836,26635,30970],"446720":[11569,13525,13415],
-"448100":[64351,83435,103445],"448330":[13552,15340,15660],"452360":[10902,12160,12325],"453330":[16359,15465,16990],
+"441640":[12230,12666,12835],"441680":[10640,11060,11420],"441800":[19836,26635,30970],"446720":[11569,13525,13415],
+"448100":[64351,83435,103445],"448330":[13552,15036,16020],"452360":[10902,12160,12325],"453330":[16359,15465,16990],
 "453850":[7539,7490,7525],"455030":[12279,12940,12675],"455660":[9639,9470,9675],"458260":[48003,47230,47950],
-"458730":[12615,14745,14640],"458750":[11065,12675,12810],"458760":[9544,11320,11090],"459580":[1066413,1073225,1075680],
+"458730":[12615,14745,14640],"458750":[11065,13058,12860],"458760":[9544,11320,11090],"459580":[1066413,1073225,1075680],
 "460660":[11058,11785,11695],"460960":[11366,11695,11920],"464470":[52284,54275,53215],"465670":[14484,15020,15000],
 "466940":[21015,25270,26500],"468370":[11344,11865,11775],"468380":[11469,11870,11855],"468630":[11630,12010,11915],
 "471460":[57361,51835,52930],"472150":[13068,16745,20910],"472830":[8832,9195,9025],"472870":[7855,7925,7780],
-"473330":[8878,9285,9145],"474220":[15414,14921,15135],"475080":[8737,8550,8510],"475380":[10159,11015,11580],
+"473330":[8878,9285,9145],"474220":[15414,14510,16155],"475080":[8737,8550,8510],"475380":[10159,11015,11580],
 "475720":[10490,11935,14020],"476550":[7356,7310,7350],"476690":[10412,9815,9725],"476750":[8445,8555,8320],
-"476760":[9755,10185,9945],"476800":[4794,4741,4970],"480020":[12149,11847,12040],"480030":[10234,10366,10525],
-"480040":[11760,13647,15105],"480460":[10022,10400,11130],"481050":[1014703,1021345,1023760],"481060":[7990,8063,7940],
+"476760":[9755,10185,9945],"476800":[4794,4835,5065],"480020":[12149,11521,12920],"480030":[10234,10396,10915],
+"480040":[11760,13672,16945],"480460":[10022,10400,11130],"481050":[1014703,1021345,1023760],"481060":[7990,7875,7945],
 "481340":[9595,9885,9690],"482730":[11473,11430,12225],"483280":[12221,11440,13160],"483290":[9089,10865,10540],
 "484790":[8715,8625,8680],"484880":[17093,21310,22565],"486290":[10185,10070,11070],"487950":[9781,11190,12220],
-"489030":[8280,8795,8685],"489250":[10820,12330,12475],"490490":[10510,11335,11425],"490590":[12489,12510,15650],
-"490600":[8256,9011,9230],"491620":[10455,10110,11305],"493420":[10661,12125,12290],"493810":[11500,11237,11405],
-"494210":[10593,10495,11290],"494300":[9528,9790,10340],"494420":[9250,9386,9545],"495040":[18016,24855,25910],
-"495050":[18172,24956,26250],"495230":[18503,24550,30275],"495330":[18060,24150,29550],"495850":[18126,24230,29700],
-"496080":[18156,24300,29710],"497780":[9357,12350,11495],"497880":[49650,50010,50145],"498400":[13276,17237,18075],
-"498410":[11316,12945,13295],"498860":[14871,19960,20300],"499150":[10568,10150,10905],"499660":[993488,999925,1002275],
-"0000D0":[9641,9800,10275],"0004G0":[8877,9320,9000],"0005A0":[9420,9540,10030],"0008S0":[8670,9861,9965],
+"489030":[8280,8795,8685],"489250":[10820,12689,12575],"490490":[10510,11524,11415],"490590":[12489,12510,15650],
+"490600":[8256,9294,9300],"491620":[10455,10110,11305],"493420":[10661,12464,12355],"493810":[11500,10832,12355],
+"494210":[10593,10495,11290],"494300":[9528,9790,10340],"494420":[9250,9307,9665],"495040":[18016,24011,29525],
+"495050":[18172,24331,29840],"495230":[18503,24550,30275],"495330":[18060,24150,29550],"495850":[18126,24230,29700],
+"496080":[18156,24300,29710],"497780":[9357,12350,11495],"497880":[49650,50010,50145],"498400":[13276,16684,20455],
+"498410":[11316,12945,13295],"498860":[14871,19686,20620],"499150":[10568,10150,10905],"499660":[993488,999925,1002275],
+"0000D0":[9641,9800,10275],"0004G0":[8877,9320,9000],"0005A0":[9420,9540,10030],"0008S0":[8670,10138,10020],
 "0013P0":[12151,11410,12110],"0013R0":[9473,9390,9190],"0015E0":[10559,10320,10870],"0015F0":[10860,10310,10270],
-"0018C0":[11091,12886,12990],"0022T0":[13957,14795,15020],"0036D0":[10226,10842,11465],"0040X0":[10584,10450,10195],
+"0018C0":[11091,12945,13245],"0022T0":[13957,14795,15020],"0036D0":[10226,11136,11850],"0040X0":[10584,10450,10195],
 "0040Y0":[9321,9060,8950],"0046A0":[9909,10425,10215],"0046Y0":[11805,12195,12745],"0048J0":[14304,15080,14780],
-"0049K0":[10825,11030,11260],"0049M0":[11142,11400,11830],"0052D0":[12974,15840,16020],"0073X0":[10582,10640,10550],
-"0080X0":[10990,11130,11235],"0084D0":[10672,10670,11545],"0084E0":[10008,10220,10650],"0085N0":[10034,9940,10005],
-"0085P0":[10495,10895,10730],"0086B0":[10280,10622,11215],"0086C0":[10130,10270,10575],"0089C0":[10859,10985,11395],
-"0089D0":[10544,13006,13385],"0091C0":[9913,9984,9860],"0094L0":[10055,9420,9100],"0094M0":[12111,16445,16490],
-"0097L0":[10804,12260,13565],"0098N0":[10582,12890,12915],"0104N0":[12520,16614,17415],"0104P0":[9759,11715,12310],
-"0105E0":[10552,13215,13240],"0107F0":[10203,11095,11620],"0111J0":[10210,17520,18905],"0115C0":[10510,11489,11215],
-"0128D0":[9134,8210,8095],"0132K0":[9217,9105,8860],"0138T0":[9375,9420,9565],"0139P0":[10849,13570,14450],
-"0144L0":[9541,9145,10035],"0152E0":[9974,11770,12390],"0153K0":[10366,11640,11650],"0153P0":[10104,10615,11170],
+"0049K0":[10825,11030,11260],"0049M0":[11142,11400,11830],"0052D0":[12974,15745,16595],"0073X0":[10582,10640,10550],
+"0080X0":[10990,11140,11450],"0084D0":[10672,10670,11545],"0084E0":[10008,10220,10650],"0085N0":[10034,9940,10005],
+"0085P0":[10495,10895,10730],"0086B0":[10280,10876,11700],"0086C0":[10130,10395,10740],"0089C0":[10859,10985,11395],
+"0089D0":[10544,12937,13700],"0091C0":[9913,9785,9870],"0094L0":[10055,9420,9100],"0094M0":[12111,15328,18225],
+"0097L0":[10804,12260,13565],"0098N0":[10582,12701,13390],"0104N0":[12520,16067,19910],"0104P0":[9759,11715,12310],
+"0105E0":[10552,13055,13860],"0107F0":[10203,11095,11620],"0111J0":[10210,17520,18905],"0115C0":[10510,11758,10975],
+"0128D0":[9134,8210,8095],"0132K0":[9217,9007,8900],"0138T0":[9375,9362,9950],"0139P0":[10849,13570,14450],
+"0144L0":[9541,9145,10035],"0152E0":[9974,11770,12390],"0153K0":[10366,11450,12080],"0153P0":[10104,10615,11170],
 "0153X0":[9933,11385,11100],"0167B0":[10120,9690,12085],"0174J0":[9785,9785,10940],"0177R0":[10715,10715,11500]
 };
 // 신규 상장 ETF 상장일 정보 (이번달/올해 수익률에 "상장일 이후" 표기)
@@ -1035,7 +1193,8 @@ const LISTING_2025 = {
 
 // 168개 ETF 현재 시총 + 최근 종가 (네이버 모바일, 2026/5/1 기준)
 // [현재 시총(억), 현재 종가(원)]. "조" 단위 종목은 수동 환산 적용.
-// 가격 비율로 4/13(월중)·4/28(월말) 시점 시총 환산: mc ≈ current_mc × (target_close / current_close)
+// 가격 비율로 통일 baseline (3/27 → 4/28) 시점 시총 환산: mc ≈ current_mc × (target_close / current_close)
+// pr2, pr3가 PRICE_UPDATES에서 모두 같은 시점으로 통일됐으므로 시총도 자동으로 통일됨
 const CURRENT_MARKET_CAP = {
 "091170":[4657,15840],"104530":[520,20805],"136340":[1469,104425],"153130":[7879,113340],
 "161510":[27985,27165],"166400":[113,22530],"181480":[101,84220],"182480":[1570,13480],
@@ -1080,6 +1239,26 @@ const CURRENT_MARKET_CAP = {
 "0144L0":[3634,9915],"0152E0":[475,12170],"0153K0":[2303,11870],"0153P0":[179,10835],
 "0153X0":[267,11125],"0167B0":[3916,11655],"0174J0":[62,10295],"0177R0":[2499,11465]
 };
+
+// 분배공시일 종가 (cycle별)
+// 매월 갱신 시점에 PRICE_UPDATES의 pr3와 별도로 관리 — pr3는 통일 baseline용,
+// 여기는 cycle별 가장 최근 분배공시일 종가만 보관 (분배율 계산 + 라벨 표시용)
+const MID_DISC_CLOSE = {
+"104530":19990,"153130":113225,"214980":114615,"237370":15860,"273140":114635,"284430":20065,
+"329650":14405,"329660":17815,"329670":21775,"402970":14695,"441640":12850,"448330":15660,
+"458750":12810,"474220":15135,"476800":4970,"480020":12040,"480030":10525,"480040":15105,
+"481060":7940,"489250":12475,"490490":11425,"490600":9230,"493420":12290,"493810":11405,
+"494420":9545,"495040":25910,"495050":26250,"498400":18075,"498860":20300,"0008S0":9965,
+"0018C0":12990,"0036D0":11465,"0052D0":16020,"0080X0":11235,"0086B0":11215,"0086C0":10575,
+"0089D0":13385,"0091C0":9860,"0094M0":16490,"0098N0":12915,"0104N0":17415,"0105E0":13240,
+"0115C0":11215,"0132K0":8860,"0138T0":9565,"0153K0":11650
+};
+
+// 월말 ETF의 가장 최근 분배공시일 종가 (현재 = 4/28).
+// 5/14 시점에는 갱신 안 함 (월말은 5/27 분배공시일까지 4/28 그대로 유지).
+// 5/29 시점에 5/27 종가로 갱신.
+// 비어있으면 fallback으로 pr3(통일 baseline) 사용.
+const END_DISC_CLOSE = {};
 
 // 4월 분배금 + 최근 분배율 + 1년 분배율 (search-etf.com, 2026/5/1 기준)
 // [4월 분배금(원), 최근 분배율(%), 1년 분배율(%) - null이면 1년 미만]
@@ -1154,11 +1333,22 @@ const ETFS = RAW.map(r => {
     if (o.pr3 != null) o.mc2 = Math.round(curMc * o.pr3 / curClose);
     if (o.pr2 != null) o.mc1 = Math.round(curMc * o.pr2 / curClose);
   }
+  // 분배공시일 종가 결정 (cycle-specific)
+  // 월중 ETF: MID_DISC_CLOSE 우선, 없으면 pr3
+  // 월말 ETF: END_DISC_CLOSE 우선, 없으면 pr3
+  // (END_DISC_CLOSE 비어있을 때는 pr3=가장 최근 월말 분배공시일이라 자동 정확)
+  const discDict = (o.dt === "월중") ? MID_DISC_CLOSE : END_DISC_CLOSE;
+  o.discClose = (discDict[o.code] != null) ? discDict[o.code] : o.pr3;
   // 4월 분배금 + 분배율 + 1년 분배율 적용
   const dupd = DIVIDEND_UPDATES[o.code];
   if (dupd) {
     o.divs = Object.assign({}, o.divs || {}, {"26-4": dupd[0]});
-    o.dr = dupd[1];
+    // 분배율 재계산: 분배금 / 분배공시일 종가 × 100 (cycle-specific 정확값)
+    if (dupd[0] != null && o.discClose) {
+      o.dr = +(dupd[0] / o.discClose * 100).toFixed(2);
+    } else {
+      o.dr = dupd[1];  // fallback: 외부 출처값
+    }
     if (dupd[2] != null) o.ax12 = dupd[2];
     o.divCurr = dupd[0];
     o.divPrev = (o.divs["26-3"] != null) ? o.divs["26-3"] : null;
@@ -1504,11 +1694,15 @@ function rowHtml(e) {
     ? `<span class="dt-tag dt-mid">월중 (15일)</span>`
     : `<span class="dt-tag dt-end">월말 (말일)</span>`;
   const c1 = `<span class="tag">${e.c1}</span><span class="tag">${e.c2}</span><span class="tag">${e.c3}</span>`;
-  const refDate = getRelevantDate(TODAY, e.dt);
-  const refLabel = fmtDateMD(refDate);
-  const priceCell = e.pr3 != null
-    ? `<div style="line-height:1.3;"><div style="font-weight:700;">${e.pr3.toLocaleString("ko-KR")}원</div><div style="font-size:11px; color:var(--ink2);">${refLabel} 기준</div></div>`
-    : `<div style="color:var(--ink2);">—<div style="font-size:11px;">${refLabel} 기준</div></div>`;
+  // 분배금 공시일 종가/라벨: cycle-specific (월중=4/13, 월말=4/28)
+  const discDate = getRelevantDate(TODAY, e.dt);
+  const discLabel = fmtDateMD(discDate);
+  // 시총 라벨: 통일 baseline (모두 4/28)
+  const mcRefDate = getRelevantDate(TODAY);
+  const mcRefLabel = fmtDateMD(mcRefDate);
+  const priceCell = e.discClose != null
+    ? `<div style="line-height:1.3;"><div style="font-weight:700;">${e.discClose.toLocaleString("ko-KR")}원</div><div style="font-size:11px; color:var(--ink2);">${discLabel} 기준</div></div>`
+    : `<div style="color:var(--ink2);">—<div style="font-size:11px;">${discLabel} 기준</div></div>`;
   return `<tr class="${e.dt === '월중' ? 'midDiv' : ''}" data-code="${e.code}">
     <td>
       <div class="nm-cell" data-code="${e.code}">
@@ -1525,7 +1719,7 @@ function rowHtml(e) {
     <td class="num">
       <div style="line-height:1.3;">
         <div style="font-weight:800; color:#3a2a1a;">${fmtMC(e.mcCurr)}</div>
-        <div style="font-size:11px; color:var(--ink2);">${refLabel} 기준</div>
+        <div style="font-size:11px; color:var(--ink2);">${mcRefLabel} 기준</div>
       </div>
     </td>
     <td class="num">
