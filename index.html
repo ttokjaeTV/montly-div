@@ -703,7 +703,7 @@ footer {
 
   <div class="newlst-toggle-wrap">
     <button id="newlstToggle" class="macro-toggle" type="button" aria-expanded="false" onclick="toggleNewListingsSection()">
-      <span class="newlst-toggle-label">🆕 신규상장 ETF 정리 보기</span>
+      <span class="newlst-toggle-label">🆕 신규상장 월배당 ETF 정리 보기</span>
       <span class="macro-toggle-caret">▼</span>
     </button>
     <div id="newListingsSection" class="new-listings-section" style="display:none;"></div>
@@ -1576,7 +1576,7 @@ function renderNewListings() {
       }).join("");
     }
     return `<div class="new-listings-card">
-      <h4><span class="month-tag">${label}</span><span style="color:#3a2a1a;">${month}월 신규상장 ETF</span> <span class="count-tag">(${items.length}종)</span></h4>
+      <h4><span class="month-tag">${label}</span><span style="color:#3a2a1a;">${month}월 신규상장 월배당 ETF</span> <span class="count-tag">(${items.length}종)</span></h4>
       ${inner}
     </div>`;
   }
@@ -1972,7 +1972,14 @@ function detailHtml(e) {
         <div class="pair"><span class="k">구분</span><span class="v">${e.c1} / ${e.c2} / ${e.c3} / ${f4Label(e.c4)}</span></div>
         <div class="pair"><span class="k">설명</span><span class="v" style="text-align:right;max-width:60%;">${e.desc||"—"}</span></div>
         <div class="pair"><span class="k">배당기준일</span><span class="v">${e.dt}</span></div>
-        ${e.note ? `<div class="note">📌 ${e.note}</div>` : ""}
+        ${(() => {
+          const nl = (typeof NEW_LISTINGS !== 'undefined') ? NEW_LISTINGS[e.code] : null;
+          const l25 = (typeof LISTING_2025 !== 'undefined') ? LISTING_2025[e.code] : null;
+          if (nl && nl.lst) return `<div class="pair"><span class="k">상장일</span><span class="v">2026/${nl.lst} 상장</span></div>`;
+          if (l25) return `<div class="pair"><span class="k">상장일</span><span class="v">2025/${l25} 상장</span></div>`;
+          return '';
+        })()}
+        ${e.note && !e.note.includes("unjena") ? `<div class="note">📌 ${e.note}</div>` : ""}
         ${e.note2 ? `<div class="note">⚠️ ${e.note2}</div>` : ""}
       </div>
       <div class="detail-card">
@@ -2268,11 +2275,11 @@ function toggleNewListingsSection() {
   if (open) {
     btn.setAttribute("aria-expanded", "false");
     sec.style.display = "none";
-    lbl.textContent = "🆕 신규상장 ETF 정리 보기";
+    lbl.textContent = "🆕 신규상장 월배당 ETF 정리 보기";
   } else {
     btn.setAttribute("aria-expanded", "true");
     sec.style.display = "";
-    lbl.textContent = "🆕 신규상장 ETF 정리 (접기)";
+    lbl.textContent = "🆕 신규상장 월배당 ETF 정리 (접기)";
   }
 }
 </script>
