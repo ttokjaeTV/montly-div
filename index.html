@@ -2147,8 +2147,12 @@ function ymdNoSep(d) {
 async function fetchChartData(code) {
   if (chartDataCache[code]) return chartDataCache[code];
   const today = new Date();
-  const start = new Date(today.getFullYear() - 5, today.getMonth(), today.getDate());
-  const naverUrl = `https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=${ymdNoSep(start)}&endTime=${ymdNoSep(today)}&timeframe=day`;
+  // 장중 실시간 데이터로 인한 408 timeout 방지: endTime을 어제로 (전날 마감 데이터까지만)
+  // 어제가 주말/공휴일이면 네이버 API가 자동으로 마지막 영업일까지 반환
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+  const start = new Date(yesterday.getFullYear() - 5, yesterday.getMonth(), yesterday.getDate());
+  const naverUrl = `https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=${ymdNoSep(start)}&endTime=${ymdNoSep(yesterday)}&timeframe=day`;
   // CORS 우회용 프록시들 (직접 fetch 실패 시 순차 시도)
   const candidates = [
     naverUrl,
