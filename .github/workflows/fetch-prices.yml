@@ -1,0 +1,45 @@
+name: Fetch ETF Chart Prices
+
+on:
+  schedule:
+    # 매일 한국시간 18:00 (UTC 09:00) — KRX 장 마감 후 2시간 30분
+    # 평일만 (월~금)
+    - cron: '0 9 * * 1-5'
+  # 수동 실행 가능 (Actions 탭에서 "Run workflow" 버튼)
+  workflow_dispatch:
+
+# 같은 워크플로우가 중복 실행되지 않도록
+concurrency:
+  group: fetch-prices
+  cancel-in-progress: true
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Fetch chart data
+        run: python scripts/fetch_chart_prices.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/chart-prices.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "chore(data): update chart prices [skip ci]"
+            git push
+            echo "Chart data updated and pushed"
+          fi
