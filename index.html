@@ -473,6 +473,7 @@ table.dt tbody tr.expand td {
 }
 .divbar .cell.empty { background:#f4f4f0; color:#bbb; font-weight:500; }
 .divbar .cell.this { background: var(--orange); color: #fff; }
+.divbar .cell.this.unpaid { background: #999; color: #fff; font-size: 12px; }
 .divbar .cell .lab {
   display:block; font-size: 11px; color: var(--ink2); font-weight: 500; margin-bottom: 2px;
 }
@@ -1477,8 +1478,10 @@ const ETFS = RAW.map(r => {
   }
   // 4월 분배금 + 분배율 + 1년 분배율 적용
   const dupd = DIVIDEND_UPDATES[o.code];
+  o.unpaidThisMonth = false;  // 미지급 플래그 (4월 분배공시일에 의도적 미지급)
   if (dupd) {
     o.divs = Object.assign({}, o.divs || {}, {"26-4": dupd[0]});
+    if (dupd[0] === null) o.unpaidThisMonth = true;  // dupd[0]이 명시적 null이면 미지급
     // 분배율 재계산: 분배금 / 분배공시일 종가 × 100 (cycle-specific 정확값)
     if (dupd[0] != null && o.discClose) {
       o.dr = +(dupd[0] / o.discClose * 100).toFixed(2);
@@ -1529,11 +1532,19 @@ const ETFS = RAW.map(r => {
     o.mcDiff = o.mc2 - o.mc1;
     o.mcDiffPct = o.mc1 ? +(o.mcDiff / o.mc1 * 100).toFixed(2) : 0;
   } else { o.mcDiff = null; o.mcDiffPct = null; }
-  // current month dividend (assume "26-3" as latest fully-known month for now)
-  const monthKeys = Object.keys(o.divs || {}).filter(k => o.divs[k] != null);
-  o.divCurr = monthKeys.length ? o.divs[monthKeys[monthKeys.length-1]] : null;
-  o.divPrev = monthKeys.length > 1 ? o.divs[monthKeys[monthKeys.length-2]] : null;
-  o.divDiff = (o.divCurr != null && o.divPrev != null) ? o.divCurr - o.divPrev : null;
+  // current month dividend fallback — DIVIDEND_UPDATES가 없는 ETF만 적용
+  // (DIVIDEND_UPDATES가 있으면 위에서 이미 정확하게 설정되어 있고, 미지급(null) 상태도 의도적이므로 유지)
+  if (!dupd) {
+    const monthKeys = Object.keys(o.divs || {}).filter(k => o.divs[k] != null);
+    o.divCurr = monthKeys.length ? o.divs[monthKeys[monthKeys.length-1]] : null;
+    o.divPrev = monthKeys.length > 1 ? o.divs[monthKeys[monthKeys.length-2]] : null;
+    o.divDiff = (o.divCurr != null && o.divPrev != null) ? o.divCurr - o.divPrev : null;
+  } else if (o.unpaidThisMonth) {
+    // 미지급 케이스: divDiff = (0 - 전월 분배금)으로 재계산 → 표에 -64원 같이 표시
+    if (o.divPrev != null) {
+      o.divDiff = -o.divPrev;
+    }
+  }
   o.mcCurr = o.mc2;
   return o;
 });
@@ -1935,7 +1946,7 @@ function rowHtml(e) {
     </td>
     <td class="num">
       <div style="line-height:1.3;">
-        <div style="font-weight:700;">${fmtNum(e.divCurr,"원")}</div>
+        <div style="font-weight:700;${e.unpaidThisMonth ? 'color:var(--ink2);' : ''}">${e.unpaidThisMonth ? '미지급' : fmtNum(e.divCurr,"원")}</div>
         <div style="font-size:11.5px;">${fmtSign(e.divDiff,"원")}</div>
       </div>
     </td>
@@ -1973,11 +1984,18 @@ function detailHtml(e) {
   const months = ["25-12","26-1","26-2","26-3","26-4","26-5","26-6","26-7","26-8","26-9","26-10","26-11","26-12"];
   const monthLabels = ["'25.12","'26.1","'26.2","'26.3","'26.4","'26.5","'26.6","'26.7","'26.8","'26.9","'26.10","'26.11","'26.12"];
   const latestKey = Object.keys(e.divs||{}).filter(k=>e.divs[k]!=null).pop();
+  // 현재 baseline 월 키 (예: "26-4")
+  const baselineKey = "26-4";
   const cells = months.map((m,i) => {
     const v = e.divs && e.divs[m];
     const isLatest = m === latestKey;
-    const cls = (v==null) ? "empty" : (isLatest ? "this" : "");
-    return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${v==null?"—":v+"원"}</div>`;
+    const isUnpaidThisMonth = (v == null) && e.unpaidThisMonth && m === baselineKey;
+    let cls;
+    if (isUnpaidThisMonth) cls = "this unpaid";
+    else if (v == null) cls = "empty";
+    else cls = isLatest ? "this" : "";
+    const display = (v == null) ? (isUnpaidThisMonth ? "미지급" : "—") : (v + "원");
+    return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${display}</div>`;
   }).join("");
   const divCount = Object.values(e.divs||{}).filter(v=>v!=null).length;
   const sum = Object.values(e.divs||{}).filter(v=>v!=null).reduce((a,b)=>a+b,0);
