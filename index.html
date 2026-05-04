@@ -1061,8 +1061,8 @@ const RAW = [
 ["채권","채권","미국","채권","332620","PLUS 미국장기우량회사채","미국 장기 우량회사채","월말",224,205,{"25-12":351,"26-1":385,"26-2":348,"26-3":346},360,0.35,4.19,4.44,97315,98130,99095,0.98,1.55,1.33,1.83,5.11,2.94,"",""],
 ["채권","채권","국내","채권","336160","RISE 금융채액티브","국내 중단기 금융채","월말",424,416,{"25-12":242,"26-1":320,"26-2":215,"26-3":227},254,0.23,2.71,2.98,102290,101835,100585,-1.23,-0.20,-1.00,-1.67,2.75,-0.92,"",""],
 ["혼합","혼합","국내","기타","341850","TIGER 리츠부동산인프라채권","국내 부동산 + 인프라 + 채권","월말",101,100,{"25-12":24,"26-1":24,"26-2":24,"26-3":24},24,0.48,5.81,5.88,4900,5040,4960,-1.59,2.40,-1.10,1.22,12.81,2.69,"명칭 변경: TR KIS → KIS",""],
-["리츠","리츠","일본","리츠","352540","KODEX 일본부동산리츠(H)","일본 리츠 + 환헤지","월말",572,551,{"25-12":63,"26-1":60,"26-2":63,"26-3":64},62,0.54,6.51,5.83,12825,12890,11795,-8.49,2.79,-7.95,-8.03,27.47,-6.57,"2024/04/19 명칭 변경",""],
-["리츠","리츠","미국","리츠","352560","KODEX 미국부동산리츠(H)","미국 리츠 + 환헤지","월말",324,326,{"25-12":33,"26-1":33,"26-2":33,"26-3":32},33,0.28,3.39,3.41,11485,12310,11325,-8.00,5.30,-7.72,-1.39,2.04,-0.54,"2024/04/19 명칭 변경",""],
+["리츠","리츠","일본","리츠","352540","KODEX 일본부동산리츠(H)","일본 리츠 + 환헤지","월말",572,551,{"25-12":63,"26-1":60,"26-2":63,"26-3":64},62,0.54,6.51,5.83,12825,12890,11795,-8.49,2.79,-7.95,-8.03,27.47,-6.57,"2026/4 분배 미지급 — 분배금 지급 재원 부족 (삼성자산운용 안내)",""],
+["리츠","리츠","미국","리츠","352560","KODEX 미국부동산리츠(H)","미국 리츠 + 환헤지","월말",324,326,{"25-12":33,"26-1":33,"26-2":33,"26-3":32},33,0.28,3.39,3.41,11485,12310,11325,-8.00,5.30,-7.72,-1.39,2.04,-0.54,"2026/4 분배 미지급 — 분배금 지급 재원 부족 (삼성자산운용 안내)",""],
 ["주식","배당","미국","해외배당","373790","KIWOOM 미국방어배당성장나스닥","10년 이상 배당성장 + 미국 대형 방어주","월말",47,47,{"25-12":25,"26-1":25,"26-2":24,"26-3":25},25,0.15,1.80,1.89,15640,16930,16700,-1.36,7.43,-1.21,6.78,5.93,7.25,"(기존)분기→2024/07부터 월분배","2025/01/14 명칭 변경"],
 ["주식","배당","미국","해외배당","402970","ACE 미국배당다우존스","SCHD","월중",7520,8006,{"25-12":53,"26-1":39,"26-2":24,"26-3":46},36,0.31,3.69,3.38,12900,14590,14960,2.54,8.56,2.84,15.97,2.39,16.81,"분배 지급기준일 30일→15일",""],
 ["채권","금리형","국내","금리","423160","KODEX KOFR금리액티브(합성)","한국예탁결제원 산출 KOFR + 액티브","월말",44142,44524,{"25-12":229,"26-1":252,"26-2":248,"26-3":221},240,0.20,2.40,2.61,110685,110845,110640,-0.18,0.20,0.01,-0.04,2.88,0.61,"",""],
@@ -1420,7 +1420,7 @@ const DIVIDEND_UPDATES = {
 "0091C0":[33,0.34,2.04],"0094M0":[340,1.87,7.36],"0098N0":[70,0.53,1.70],"0104N0":[103,0.52,2.38],
 "0115C0":[34,0.31,1.24],"0132K0":[180,2.02,7.11],"0138T0":[118,1.18,3.25],"0153K0":[33,0.28,0.27],
 "490490":[30,0.26,2.79],"493420":[34,0.27,2.28],"0080X0":[22,0.19,1.14],"0105E0":[60,0.43,2.43],
-"352540":[64,0.54,6.22],"352560":[32,0.26,3.49],
+"352540":[null,0,5.72],"352560":[null,0,3.18],
 // === 2026/05 추가: unjena 마스터 검증 8종 (search-etf 분배 이력 정확값) ===
 "0057H0":[11,0.09,1.10],"0089B0":[10,0.09,0.67],"0127T0":[15,0.14,0.75],"0127V0":[10,0.09,0.55],
 "476850":[107,0.50,5.15],"0176P0":[195,1.54,null]
@@ -2152,22 +2152,29 @@ async function fetchChartData(code) {
   yesterday.setDate(today.getDate() - 1);
   const start = new Date(yesterday.getFullYear() - 5, yesterday.getMonth(), yesterday.getDate());
   const naverUrl = `https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=${ymdNoSep(start)}&endTime=${ymdNoSep(yesterday)}&timeframe=day`;
-  // CORS 우회용 프록시들 (직접 fetch 실패 시 순차 시도)
+  // CORS 우회용 프록시들 (작동 확인된 순서대로 정렬)
   // wrapped: true → 응답이 JSON 래퍼({contents, status})로 오는 형식
-  const candidates = [
-    { name: "Naver 직접", url: naverUrl },
+  const allCandidates = [
+    { name: "cors.eu.org", url: "https://cors.eu.org/" + naverUrl },
     { name: "corsproxy.io", url: "https://corsproxy.io/?" + encodeURIComponent(naverUrl) },
+    { name: "codetabs", url: "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(naverUrl) },
     { name: "allorigins/get", url: "https://api.allorigins.win/get?url=" + encodeURIComponent(naverUrl), wrapped: true },
     { name: "allorigins/raw", url: "https://api.allorigins.win/raw?url=" + encodeURIComponent(naverUrl) },
-    { name: "codetabs", url: "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(naverUrl) },
     { name: "cors.sh", url: "https://proxy.cors.sh/" + naverUrl },
-    { name: "cors.eu.org", url: "https://cors.eu.org/" + naverUrl },
     { name: "thingproxy", url: "https://thingproxy.freeboard.io/fetch/" + naverUrl },
   ];
+  // 세션 내 작동 프록시 우선 시도 (window._chartProxyWinner)
+  const candidates = window._chartProxyWinner
+    ? [allCandidates.find(c => c.name === window._chartProxyWinner), ...allCandidates.filter(c => c.name !== window._chartProxyWinner)].filter(Boolean)
+    : allCandidates;
   const errors = [];
   for (const c of candidates) {
     try {
-      const resp = await fetch(c.url);
+      // 6초 timeout으로 느린 프록시는 빠르게 포기
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 6000);
+      const resp = await fetch(c.url, { signal: ctrl.signal });
+      clearTimeout(timer);
       if (!resp.ok) { errors.push(`${c.name}: HTTP ${resp.status}`); continue; }
       let text = await resp.text();
       // allorigins/get는 {contents: "...", status: {...}} 래퍼 형태
@@ -2182,10 +2189,11 @@ async function fetchChartData(code) {
       if (!Array.isArray(parsed) || parsed.length < 2) { errors.push(`${c.name}: 데이터 없음`); continue; }
       const rows = parsed.slice(1).map(r => ({ date: String(r[0]), close: r[4] }));
       chartDataCache[code] = rows;
+      window._chartProxyWinner = c.name;  // 세션 내 다음 차트는 이 프록시 먼저
       console.log(`[chart] ${code}: ${c.name} 성공 (${rows.length}개)`);
       return rows;
     } catch (e) {
-      errors.push(`${c.name}: ${e.message}`);
+      errors.push(`${c.name}: ${e.name === 'AbortError' ? 'timeout 6s' : e.message}`);
     }
   }
   // 모든 fetch 실패 — 상세 에러 throw
