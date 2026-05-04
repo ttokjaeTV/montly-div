@@ -2148,34 +2148,49 @@ async function fetchChartData(code) {
   if (chartDataCache[code]) return chartDataCache[code];
   const today = new Date();
   // 장중 실시간 데이터로 인한 408 timeout 방지: endTime을 어제로 (전날 마감 데이터까지만)
-  // 어제가 주말/공휴일이면 네이버 API가 자동으로 마지막 영업일까지 반환
   const yesterday = new Date(today);
   yesterday.setDate(today.getDate() - 1);
   const start = new Date(yesterday.getFullYear() - 5, yesterday.getMonth(), yesterday.getDate());
   const naverUrl = `https://api.finance.naver.com/siseJson.naver?symbol=${code}&requestType=1&startTime=${ymdNoSep(start)}&endTime=${ymdNoSep(yesterday)}&timeframe=day`;
   // CORS 우회용 프록시들 (직접 fetch 실패 시 순차 시도)
+  // wrapped: true → 응답이 JSON 래퍼({contents, status})로 오는 형식
   const candidates = [
-    naverUrl,
-    "https://corsproxy.io/?" + encodeURIComponent(naverUrl),
-    "https://api.allorigins.win/raw?url=" + encodeURIComponent(naverUrl),
+    { name: "Naver 직접", url: naverUrl },
+    { name: "corsproxy.io", url: "https://corsproxy.io/?" + encodeURIComponent(naverUrl) },
+    { name: "allorigins/get", url: "https://api.allorigins.win/get?url=" + encodeURIComponent(naverUrl), wrapped: true },
+    { name: "allorigins/raw", url: "https://api.allorigins.win/raw?url=" + encodeURIComponent(naverUrl) },
+    { name: "codetabs", url: "https://api.codetabs.com/v1/proxy?quest=" + encodeURIComponent(naverUrl) },
+    { name: "cors.sh", url: "https://proxy.cors.sh/" + naverUrl },
+    { name: "cors.eu.org", url: "https://cors.eu.org/" + naverUrl },
+    { name: "thingproxy", url: "https://thingproxy.freeboard.io/fetch/" + naverUrl },
   ];
-  let lastErr = null;
-  for (const url of candidates) {
+  const errors = [];
+  for (const c of candidates) {
     try {
-      const resp = await fetch(url);
-      if (!resp.ok) { lastErr = new Error("HTTP " + resp.status); continue; }
+      const resp = await fetch(c.url);
+      if (!resp.ok) { errors.push(`${c.name}: HTTP ${resp.status}`); continue; }
       let text = await resp.text();
+      // allorigins/get는 {contents: "...", status: {...}} 래퍼 형태
+      if (c.wrapped) {
+        try {
+          const wrapper = JSON.parse(text);
+          text = wrapper.contents || text;
+        } catch (_) { /* 일반 텍스트면 그대로 진행 */ }
+      }
       text = text.replace(/'/g, '"');
       const parsed = JSON.parse(text);
-      if (!Array.isArray(parsed) || parsed.length < 2) { lastErr = new Error("데이터 없음"); continue; }
+      if (!Array.isArray(parsed) || parsed.length < 2) { errors.push(`${c.name}: 데이터 없음`); continue; }
       const rows = parsed.slice(1).map(r => ({ date: String(r[0]), close: r[4] }));
       chartDataCache[code] = rows;
+      console.log(`[chart] ${code}: ${c.name} 성공 (${rows.length}개)`);
       return rows;
     } catch (e) {
-      lastErr = e;
+      errors.push(`${c.name}: ${e.message}`);
     }
   }
-  throw lastErr || new Error("모든 fetch 실패");
+  // 모든 fetch 실패 — 상세 에러 throw
+  const detailErr = new Error(errors.join(" | "));
+  throw detailErr;
 }
 
 function filterByPeriod(rows, period) {
