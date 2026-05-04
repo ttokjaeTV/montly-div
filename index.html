@@ -2014,15 +2014,29 @@ function detailHtml(e) {
   const latestKey = Object.keys(e.divs||{}).filter(k=>e.divs[k]!=null).pop();
   // 현재 baseline 월 키 (예: "26-4")
   const baselineKey = "26-4";
+  // 첫 분배 월 인덱스 (이 이후의 명시적 null = 미지급으로 표기)
+  const firstFilledIdx = (() => {
+    for (let i = 0; i < months.length; i++) {
+      if (e.divs && e.divs[months[i]] != null) return i;
+    }
+    return -1;
+  })();
+  const baselineIdx = months.indexOf(baselineKey);
   const cells = months.map((m,i) => {
     const v = e.divs && e.divs[m];
     const isLatest = m === latestKey;
-    const isUnpaidThisMonth = (v == null) && e.unpaidThisMonth && m === baselineKey;
+    // 미지급 판별: divs 객체에 명시적 null로 들어있고, 첫 분배월 ~ baseline 구간 안에 있는 경우
+    const isExplicitNull = e.divs && (m in e.divs) && e.divs[m] === null;
+    const isInActiveWindow = firstFilledIdx !== -1 && i >= firstFilledIdx && i <= baselineIdx;
+    const isUnpaidMonth = (v == null) && (
+      (isExplicitNull && isInActiveWindow) ||
+      (e.unpaidThisMonth && m === baselineKey)
+    );
     let cls;
-    if (isUnpaidThisMonth) cls = "this unpaid";
+    if (isUnpaidMonth) cls = (m === baselineKey ? "this unpaid" : "unpaid");
     else if (v == null) cls = "empty";
     else cls = isLatest ? "this" : "";
-    const display = (v == null) ? (isUnpaidThisMonth ? "미지급" : "—") : (v + "원");
+    const display = (v == null) ? (isUnpaidMonth ? "미지급" : "—") : (v + "원");
     return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${display}</div>`;
   }).join("");
   const divCount = Object.values(e.divs||{}).filter(v=>v!=null).length;
