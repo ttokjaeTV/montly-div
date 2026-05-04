@@ -521,15 +521,20 @@ footer {
 .wrap .kpi .val { font-size: 30px; margin-top: 2px; }
 .wrap .kpi .sub { font-size: 14.5px; margin-top: 2px; }
 .wrap .tableScroll { max-height: 85vh; }
-.wrap table.dt { font-size: 19px; }
-.wrap table.dt thead th { font-size: 18px; padding: 10px 12px; }
-.wrap table.dt thead th .sublbl { font-size: 15px; padding: 2px 6px; }
-.wrap table.dt tbody td { padding: 8px 12px; line-height: 1.25; }
+.wrap table.dt { font-size: 18px; }
+.wrap table.dt thead th { font-size: 17px; padding: 10px 11px; }
+.wrap table.dt thead th .sublbl { font-size: 14px; padding: 2px 6px; }
+.wrap table.dt tbody td { padding: 8px 11px; line-height: 1.25; }
 /* 종목명 컬럼 가로폭 제한 — 2025 TR 컬럼까지 한 화면에 들어가도록 */
 .wrap table.dt thead th:first-child,
 .wrap table.dt tbody tr:not(.expand) td:first-child {
   max-width: 280px;
   width: 280px;
+}
+/* 종목 (코드) 헤더만 왼쪽 들여쓰기 — + 버튼 폭만큼만 띄워서 종목명 시작 위치 근처로 */
+.wrap table.dt thead th:first-child {
+  padding-left: 32px;
+  text-align: left;
 }
 .wrap .nm-cell { font-size: 16px; gap: 8px; align-items: flex-start; }
 .wrap .nm-cell .toggle { width: 24px; height: 24px; font-size: 16px; border-radius: 6px; flex-shrink: 0; }
@@ -537,7 +542,7 @@ footer {
 .wrap .nm-name { font-size: 15px; line-height: 1.3; word-break: keep-all; white-space: normal; font-weight: 700; }
 .wrap .code { font-size: 14px; }
 .wrap .tag { font-size: 11.5px; padding: 1px 5px; }
-.wrap .dt-tag { font-size: 16px; padding: 4px 12px; }
+.wrap .dt-tag { font-size: 15px; padding: 4px 11px; }
 .wrap .nm-chips { margin-top: 2px; }
 .wrap .detail-card { padding: 9px 12px; }
 .wrap .detail-card h4 { font-size: 14px; margin: 0 0 5px; padding-bottom: 4px; }
@@ -1101,7 +1106,7 @@ const RAW = [
 ["채권","채권","미국","채권","464470","PLUS 미국채30년액티브","만기 20년 이상 미국 국고채","월말",541,475,{"25-12":108,"26-1":107,"26-2":108,"26-3":108},108,0.20,2.37,2.46,52595,53860,54730,1.62,3.13,1.81,4.06,2.47,4.67,"",""],
 ["주식","배당","미국","해외배당","465670","TIGER 미국캐시카우100","잉여현금흐름 높은 미국상장 100개","월말",131,128,{"25-12":35,"26-1":16,"26-2":21,"26-3":12},16,0.08,0.97,1.35,14530,14540,14900,2.48,0.42,2.56,2.55,15.22,2.88,"2023/09/19 신규상장",""],
 ["주식","배당","국내","국내배당","466940","TIGER 은행고배당플러스TOP10","국내 고배당 은행주 10개","월말",9618,9901,{"25-12":72,"26-1":73,"26-2":87,"26-3":87},82,0.35,4.24,4.66,21215,28530,24610,-13.74,25.05,-13.39,16.00,65.60,17.17,"2023/10/17 신규상장",""],
-["채권","채권","미국","채권","468370","KODEX iShares미국인플레이션국채액티브","미국 물가연동 채권(듀레이션 6.53년)","월말",180,186,{"25-12":32,"26-1":31,"26-2":31,"26-3":31},31,0.26,3.12,3.27,11375,11385,11935,4.83,1.16,5.09,4.92,4.87,5.74,"",""],
+["채권","채권","미국","채권","468370","KODEX iShares미국인플레이션국채액티브","미국 물가연동 채권(듀레이션 6.53년)","월말",180,186,{"25-12":32,"26-1":31,"26-2":null,"26-3":null},31,0.26,3.12,3.27,11375,11385,11935,4.83,1.16,5.09,4.92,4.87,5.74,"2026/2~4월 분배 미지급 — 편입물(TIP US) 블랙록iShares 분배 정책에 따라 분배금 미발생 (삼성자산운용 공시)",""],
 ["채권","채권","미국","채권","468380","KODEX iShares미국하이일드액티브","미국 하이일드 채권(듀레이션 3.32년)","월말",1130,1090,{"25-12":68,"26-1":73,"26-2":64,"26-3":59},65,0.50,5.97,6.73,11655,11580,11865,2.46,0.42,2.96,1.80,6.66,3.48,"2023/10/19 신규상장",""],
 ["채권","채권","미국","채권","468630","KODEX iShares미국투자등급회사채액티브","미국 투자등급 회사채(LQD)","월말",356,363,{"25-12":39,"26-1":49,"26-2":40,"26-3":39},43,0.32,3.88,4.36,11750,11810,12075,2.24,1.54,2.57,2.77,6.13,3.86,"2023/10/19 신규상장",""],
 ["채권","채권","국내","채권","471460","KIWOOM 국고채30년액티브","만기 30년 국내 초장기 국고채","월말",335,270,{"25-12":109,"26-1":109,"26-2":109,"26-3":127},115,0.24,2.93,2.39,57720,54940,51935,-5.47,-1.21,-5.23,-10.02,-8.18,-9.42,"(기존)분기→2024/07부터 월분배","2025/01/14 명칭 변경"],
