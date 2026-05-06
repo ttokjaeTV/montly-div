@@ -2004,9 +2004,9 @@ function rowHtml(e) {
             tb = Math.round(tb * e.divCurr / divEtf);
           }
           let cls, txt;
-          if (tb === e.divCurr) { cls = 'same'; txt = '과표 ' + tb + '원'; }
+          if (tb === e.divCurr) { cls = 'same'; txt = '과표 ' + fmtNum(tb, '원'); }
           else if (tb === 0) { cls = 'nontax'; txt = '과표 0원'; }
-          else { cls = 'partial'; txt = '과표 ' + tb + '원'; }
+          else { cls = 'partial'; txt = '과표 ' + fmtNum(tb, '원'); }
           return `<div class="row-tax ${cls}">${txt}</div>`;
         })()}
         <div style="font-size:11.5px;">${fmtSign(e.divDiff,"원")}</div>
@@ -2070,7 +2070,7 @@ function detailHtml(e) {
     if (isUnpaidMonth) cls = (m === baselineKey ? "this unpaid" : "unpaid");
     else if (v == null) cls = "empty";
     else cls = isLatest ? "this" : "";
-    const display = (v == null) ? (isUnpaidMonth ? "미지급" : "—") : (v + "원");
+    const display = (v == null) ? (isUnpaidMonth ? "미지급" : "—") : fmtNum(v, "원");
     // 과세표준액 표시 (tax-base.json에 데이터 있는 모든 종목)
     let taxLine = '';
     if (v != null) {
@@ -2085,12 +2085,12 @@ function detailHtml(e) {
         }
         let taxCls, taxText;
         if (taxBase === v) {
-          taxCls = 'same'; taxText = '과표 ' + taxBase + '원';
+          taxCls = 'same'; taxText = '과표 ' + fmtNum(taxBase, '원');
         } else if (taxBase === 0) {
           taxCls = 'nontax'; taxText = '과표 0원';
         } else {
           taxCls = 'partial';
-          taxText = '과표 ' + taxBase + '원';
+          taxText = '과표 ' + fmtNum(taxBase, '원');
         }
         taxLine = '<span class="tax ' + taxCls + '">' + taxText + '</span>';
       }
