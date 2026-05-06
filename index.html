@@ -1997,9 +1997,14 @@ function rowHtml(e) {
           if (e.unpaidThisMonth || e.divCurr == null) return '';
           const rec = findTaxRecord(e.code, '26-4');
           if (!rec) return '';
-          const dv = rec[1], tb = Math.max(0, rec[2]); // 음수는 0 보정
+          const divEtf = rec[1];
+          let tb = Math.max(0, rec[2]); // 음수는 0 보정
+          // ETF CHECK과 트래커 분배금 단위 차이 비율 보정
+          if (divEtf > 0 && divEtf !== e.divCurr) {
+            tb = Math.round(tb * e.divCurr / divEtf);
+          }
           let cls, txt;
-          if (tb === dv) { cls = 'same'; txt = '과표 ' + tb + '원'; }
+          if (tb === e.divCurr) { cls = 'same'; txt = '과표 ' + tb + '원'; }
           else if (tb === 0) { cls = 'nontax'; txt = '과표 0원'; }
           else { cls = 'partial'; txt = '과표 ' + tb + '원'; }
           return `<div class="row-tax ${cls}">${txt}</div>`;
@@ -2071,9 +2076,15 @@ function detailHtml(e) {
     if (v != null) {
       const taxRec = findTaxRecord(e.code, m);
       if (taxRec) {
-        const divAmt = taxRec[1], taxBase = Math.max(0, taxRec[2]); // 음수는 0 보정 (세법상 동일)
+        const divEtf = taxRec[1];
+        let taxBase = Math.max(0, taxRec[2]); // 음수는 0 보정 (세법상 동일)
+        // ETF CHECK과 트래커 분배금 단위가 다른 경우 비율 보정
+        // (예: 459580 KODEX CD금리액티브 — ETF CHECK 2원 vs 트래커 2389원)
+        if (divEtf > 0 && divEtf !== v) {
+          taxBase = Math.round(taxBase * v / divEtf);
+        }
         let taxCls, taxText;
-        if (taxBase === divAmt) {
+        if (taxBase === v) {
           taxCls = 'same'; taxText = '과표 ' + taxBase + '원';
         } else if (taxBase === 0) {
           taxCls = 'nontax'; taxText = '과표 0원';
