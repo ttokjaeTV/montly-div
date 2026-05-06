@@ -486,6 +486,23 @@ table.dt tbody tr.expand td {
 }
 .divbar .cell.this .lab { color: rgba(255,255,255,0.85); }
 .divbar .cell.unpaid .lab { color: #888; }
+/* 과세표준액 표시 (cell 하단 보조 라인) */
+.divbar .cell .tax {
+  display: block; font-size: 12px; font-weight: 500;
+  margin-top: 3px; line-height: 1.15;
+  color: #999;
+}
+.divbar .cell .tax.same { color: #b0b0b0; }
+.divbar .cell .tax.partial { color: #c46410; font-weight: 700; }
+.divbar .cell .tax.nontax { color: #d33024; font-weight: 700; }
+.divbar .cell.this .tax.same { color: rgba(255,255,255,0.55); }
+.divbar .cell.this .tax.partial { color: #fff7d6; font-weight: 700; }
+.divbar .cell.this .tax.nontax { color: #ffe9e6; font-weight: 700; }
+/* 메인 테이블 행의 분배금 컬럼 과표 표시 */
+.row-tax { font-size: 11px; font-weight: 600; margin-top: 1px; line-height: 1.15; }
+.row-tax.same { color: #b0b0b0; }
+.row-tax.partial { color: #c46410; font-weight: 700; }
+.row-tax.nontax { color: #d33024; font-weight: 700; }
 .note {
   font-size: 13px; color: var(--ink2);
   background: #fffaee;
@@ -1975,6 +1992,18 @@ function rowHtml(e) {
     <td class="num">
       <div style="line-height:1.3;">
         <div style="font-weight:700;${e.unpaidThisMonth ? 'color:var(--ink2);' : ''}">${e.unpaidThisMonth ? '미지급' : fmtNum(e.divCurr,"원")}</div>
+        ${(() => {
+          // 메인 행 분배금 바로 아래 과표 표시 (tax-base.json에 있는 모든 종목)
+          if (e.unpaidThisMonth || e.divCurr == null) return '';
+          const rec = findTaxRecord(e.code, '26-4');
+          if (!rec) return '';
+          const dv = rec[1], tb = Math.max(0, rec[2]); // 음수는 0 보정
+          let cls, txt;
+          if (tb === dv) { cls = 'same'; txt = '과표 ' + tb + '원'; }
+          else if (tb === 0) { cls = 'nontax'; txt = '과표 0원'; }
+          else { cls = 'partial'; txt = '과표 ' + tb + '원'; }
+          return `<div class="row-tax ${cls}">${txt}</div>`;
+        })()}
         <div style="font-size:11.5px;">${fmtSign(e.divDiff,"원")}</div>
       </div>
     </td>
@@ -2037,7 +2066,25 @@ function detailHtml(e) {
     else if (v == null) cls = "empty";
     else cls = isLatest ? "this" : "";
     const display = (v == null) ? (isUnpaidMonth ? "미지급" : "—") : (v + "원");
-    return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${display}</div>`;
+    // 과세표준액 표시 (tax-base.json에 데이터 있는 모든 종목)
+    let taxLine = '';
+    if (v != null) {
+      const taxRec = findTaxRecord(e.code, m);
+      if (taxRec) {
+        const divAmt = taxRec[1], taxBase = Math.max(0, taxRec[2]); // 음수는 0 보정 (세법상 동일)
+        let taxCls, taxText;
+        if (taxBase === divAmt) {
+          taxCls = 'same'; taxText = '과표 ' + taxBase + '원';
+        } else if (taxBase === 0) {
+          taxCls = 'nontax'; taxText = '과표 0원';
+        } else {
+          taxCls = 'partial';
+          taxText = '과표 ' + taxBase + '원';
+        }
+        taxLine = '<span class="tax ' + taxCls + '">' + taxText + '</span>';
+      }
+    }
+    return `<div class="cell ${cls}"><span class="lab">${monthLabels[i]}</span>${display}${taxLine}</div>`;
   }).join("");
   const divCount = Object.values(e.divs||{}).filter(v=>v!=null).length;
   const sum = Object.values(e.divs||{}).filter(v=>v!=null).reduce((a,b)=>a+b,0);
@@ -2196,6 +2243,37 @@ function render() {
     loadAndRenderChart(code, "1M");
   });
 }
+
+// ==== 과세표준액 데이터 (트래커 173종 전체 적용) ====================
+// data/tax-base.json — 배당/커버드콜/혼합 (112종)
+// data/tax-base-extra.json — 채권/금리형/리츠/시장지수/테마 (61종)
+let _taxBaseData = null;
+let _taxBasePromise = null;
+function loadTaxBaseData() {
+  if (_taxBaseData) return Promise.resolve(_taxBaseData);
+  if (_taxBasePromise) return _taxBasePromise;
+  _taxBasePromise = Promise.all([
+    fetch("./data/tax-base.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch("./data/tax-base-extra.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]).then(([j1, j2]) => {
+    _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
+    // 이미 펼쳐진 detail이 있으면 다시 render
+    if (state.expanded && state.expanded.size > 0) {
+      try { render(); } catch(e) {}
+    }
+    return _taxBaseData;
+  });
+  return _taxBasePromise;
+}
+// 분배락 월 키 (예: "26-4") → 해당 분배의 과세표준액 record
+function findTaxRecord(code, monthKey) {
+  if (!_taxBaseData || !_taxBaseData[code]) return null;
+  const [yy, mm] = monthKey.split('-');
+  const prefix = '20' + yy + '/' + String(mm).padStart(2, '0');
+  return _taxBaseData[code].find(rec => rec[0].startsWith(prefix));
+}
+// 페이지 로드 즉시 prefetch
+loadTaxBaseData();
 
 // ==== 주가 차트 (Chart.js + GitHub Actions 매일 갱신 정적 JSON) ================
 // CORS 프록시 영구 폐기 — 같은 도메인의 정적 JSON 파일을 읽으므로 CORS 문제 없음.
