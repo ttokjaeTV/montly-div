@@ -2257,10 +2257,8 @@ function loadTaxBaseData() {
     fetch("./data/tax-base-extra.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
   ]).then(([j1, j2]) => {
     _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
-    // 이미 펼쳐진 detail이 있으면 다시 render
-    if (state.expanded && state.expanded.size > 0) {
-      try { render(); } catch(e) {}
-    }
+    // fetch 완료 후 무조건 re-render (메인 행 + 펼쳐진 detail 모두 갱신)
+    try { if (typeof render === 'function') render(); } catch(e) {}
     return _taxBaseData;
   });
   return _taxBasePromise;
