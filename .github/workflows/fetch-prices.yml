@@ -2,9 +2,9 @@ name: Fetch ETF Chart Prices
 
 on:
   schedule:
-    # 매일 한국시간 18:00 (UTC 09:00) — KRX 장 마감 후 2시간 30분
-    # 평일만 (월~금)
-    - cron: '0 9 * * 1-5'
+    # 매일 한국시간 19:15 (UTC 10:15) — KRX 장 마감 후 약 4시간 (당일 종가 안정적으로 발행된 후)
+    # 평일만 (월~금). 정시 GitHub 부하 회피 위해 15분
+    - cron: '15 10 * * 1-5'
   # 수동 실행 가능 (Actions 탭에서 "Run workflow" 버튼)
   workflow_dispatch:
 
