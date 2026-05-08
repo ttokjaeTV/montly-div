@@ -17,8 +17,11 @@ import urllib.error
 import json
 import time
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+
+# 한국시간 (GitHub Actions는 UTC라 명시적으로 KST 사용)
+KST = timezone(timedelta(hours=9))
 
 # 176개 ETF 코드 (월배당 트래커 전체)
 ETF_CODES = [
@@ -104,13 +107,13 @@ def fetch_one(code, start_ymd, end_ymd):
 
 
 def main():
-    today = datetime.now()
-    yesterday = today - timedelta(days=1)
-    # 5년치 데이터
-    start = yesterday.replace(year=yesterday.year - 5)
+    # 한국시간 기준 today (cron 19:15 KST에 실행되므로 당일 종가까지 fetch 가능)
+    today = datetime.now(KST)
+    # 5년치 데이터: today에서 5년 전
+    start = today.replace(year=today.year - 5)
 
     s = start.strftime("%Y%m%d")
-    e = yesterday.strftime("%Y%m%d")
+    e = today.strftime("%Y%m%d")  # 당일 종가까지 fetch
 
     print(f"=== 차트 데이터 수집 시작 ===")
     print(f"기간: {s} ~ {e}")
