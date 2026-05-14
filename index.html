@@ -272,6 +272,64 @@ header.top .badge {
 .new-listings-card .listing-name { font-weight: 700; color: #3a2a1a; font-size: 15px; }
 .new-listings-card .listing-code { color: var(--ink2); font-size: 13px; margin-left: 6px; font-family: monospace; }
 .new-listings-card .listing-meta { color: var(--ink2); font-size: 13.5px; margin-top: 4px; line-height: 1.5; }
+/* 분배금 미지급 ETF 토글 + 섹션 */
+.unpaid-toggle-wrap { margin: 8px 0 16px; }
+.macro-toggle[aria-expanded="true"] + #unpaidSection,
+.macro-toggle[aria-expanded="true"] + .new-listings-section.unpaid-show { display: block !important; }
+.unpaid-card {
+  background: #fff8f3;
+  border: 1px solid #f4d4b8;
+  border-left: 4px solid #d97c2a;
+  border-radius: 12px;
+  padding: 18px 20px;
+}
+.unpaid-card h4 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: #6b3a16;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.unpaid-card .unpaid-row {
+  padding: 12px 0;
+  border-bottom: 1px solid #f4d4b8;
+}
+.unpaid-card .unpaid-row:last-child { border-bottom: none; }
+.unpaid-card .unpaid-row:first-of-type { padding-top: 4px; }
+.unpaid-card .unpaid-head {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.unpaid-card .unpaid-name { font-weight: 700; color: #3a2a1a; font-size: 15.5px; }
+.unpaid-card .unpaid-code { color: var(--ink2); font-size: 13px; font-family: monospace; }
+.unpaid-card .unpaid-mgr {
+  background: #fff1d9;
+  color: var(--orange);
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-left: 4px;
+}
+.unpaid-card .unpaid-summary {
+  margin-top: 6px;
+  color: #5a4530;
+  font-size: 14px;
+  line-height: 1.55;
+}
+.unpaid-card .unpaid-link {
+  margin-top: 6px;
+  display: inline-block;
+  color: #d97c2a;
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border-bottom: 1px solid #d97c2a;
+}
+.unpaid-card .unpaid-link:hover { color: #b8651e; }
+.unpaid-card .unpaid-date { color: var(--ink2); font-size: 12.5px; margin-left: auto; }
+.unpaid-card .empty-msg { color: var(--ink2); font-size: 14px; padding: 16px 0; text-align: center; }
 .macro-table-wrap h4 {
   margin: 0 0 8px;
   font-size: 13.5px;
@@ -738,6 +796,14 @@ footer {
       <span class="macro-toggle-caret">▼</span>
     </button>
     <div id="newListingsSection" class="new-listings-section" style="display:none;"></div>
+  </div>
+
+  <div class="unpaid-toggle-wrap">
+    <button id="unpaidToggle" class="macro-toggle" type="button" aria-expanded="false" onclick="toggleUnpaidSection()">
+      <span class="unpaid-toggle-label">⚠️ 이번달 분배금 미지급 ETF 정리 보기</span>
+      <span class="macro-toggle-caret">▼</span>
+    </button>
+    <div id="unpaidSection" class="new-listings-section" style="display:none;"></div>
   </div>
 
   <div class="tableWrap">
@@ -1811,6 +1877,63 @@ const ETFS = RAW.map(r => {
   return o;
 });
 
+// ==== 분배금 미지급 ETF 공지 (운용사 공지 링크 + 1줄 요약) ====
+// 키: "YY-M" (예: "26-5"), 값: { 코드: { url, title, date, summary, mgr } }
+// 매월 갱신 시 새 월 키 추가. 운용사(mgr) = KODEX, TIGER, RISE, ACE 등.
+const UNPAID_NOTICES = {
+  "26-5": {
+    "495050": {
+      mgr: "RISE",
+      title: "RISE 코리아밸류업 ETF 분배금 관련 공지사항",
+      url: "https://www.riseetf.co.kr/cust/notice/168",
+      date: "2026-05-12",
+      summary: "시장 변동성 확대 + KRX 코리아밸류업 지수 구성종목 변경에 따른 포트폴리오 조정으로, 5월 월분배금은 다음 달(6월) 월분배금 산정 시 합산하여 지급 예정 (분배 재원 소멸·제외 아님)."
+    }
+  }
+};
+
+// 분배금 미지급 ETF 섹션 렌더
+function renderUnpaidSection() {
+  const host = document.getElementById("unpaidSection");
+  if (!host) return;
+  // 가장 최근 분배공시일 baseline의 사이클 키 결정 (월중=15일, 월말=말일)
+  const baseDate = getRelevantDate(TODAY);
+  const ty = baseDate ? baseDate.y : TODAY.getFullYear();
+  const tm = baseDate ? baseDate.m : (TODAY.getMonth() + 1);
+  const monthKey = String(ty).slice(2) + "-" + tm;  // "26-5"
+  const monthLabel = ty + "년 " + tm + "월";
+
+  const codeMap = {};
+  ETFS.forEach(e => { codeMap[e.code] = e; });
+
+  const data = UNPAID_NOTICES[monthKey] || {};
+  const codes = Object.keys(data);
+  let inner;
+  if (codes.length === 0) {
+    inner = `<div class="empty-msg">이번달 미지급 공지된 ETF 없음</div>`;
+  } else {
+    inner = codes.map(code => {
+      const e = codeMap[code];
+      const n = data[code];
+      const nm = e ? e.nm : code;
+      return `<div class="unpaid-row">
+        <div class="unpaid-head">
+          <span class="unpaid-name">${nm}</span><span class="unpaid-code">${code}</span>
+          ${n.mgr ? `<span class="unpaid-mgr">${n.mgr}</span>` : ''}
+          <span class="unpaid-date">${n.date || ''}</span>
+        </div>
+        <div class="unpaid-summary">${n.summary || ''}</div>
+        ${n.url ? `<a class="unpaid-link" href="${n.url}" target="_blank" rel="noopener">📎 운용사 공지 보기 — ${n.title || '바로가기'}</a>` : ''}
+      </div>`;
+    }).join("");
+  }
+
+  host.innerHTML = `<div class="unpaid-card">
+    <h4>⚠️ <span>${monthLabel} 분배금 미지급 ETF</span> <span style="color:var(--ink2); font-weight:500; font-size:13px;">(${codes.length}종)</span></h4>
+    ${inner}
+  </div>`;
+}
+
 // 신규상장 섹션 렌더 (지난달·이번달)
 // 기준: 트래커에 반영된 가장 최근 분배공시일 baseline의 월
 // (예: 4/28 baseline 적용 중이면 이번달=4월, 지난달=3월)
@@ -2646,6 +2769,7 @@ async function loadAndRenderChart(code, period) {
 }
 render();
 renderNewListings();
+renderUnpaidSection();
 
 function toggleNewListingsSection() {
   const btn = document.getElementById("newlstToggle");
@@ -2661,6 +2785,23 @@ function toggleNewListingsSection() {
     btn.setAttribute("aria-expanded", "true");
     sec.style.display = "";
     lbl.textContent = "🆕 신규상장 월배당 ETF 정리 (접기)";
+  }
+}
+
+function toggleUnpaidSection() {
+  const btn = document.getElementById("unpaidToggle");
+  const sec = document.getElementById("unpaidSection");
+  const lbl = btn.querySelector(".unpaid-toggle-label");
+  if (!btn || !sec) return;
+  const open = btn.getAttribute("aria-expanded") === "true";
+  if (open) {
+    btn.setAttribute("aria-expanded", "false");
+    sec.style.display = "none";
+    lbl.textContent = "⚠️ 이번달 분배금 미지급 ETF 정리 보기";
+  } else {
+    btn.setAttribute("aria-expanded", "true");
+    sec.style.display = "";
+    lbl.textContent = "⚠️ 이번달 분배금 미지급 ETF 정리 (접기)";
   }
 }
 </script>
