@@ -2388,9 +2388,13 @@ function rowHtml(e) {
         <div style="font-weight:700;${e.unpaidThisMonth ? 'color:var(--ink2);' : ''}">${e.unpaidThisMonth ? '미지급' : fmtNum(e.divCurr,"원")}</div>
         ${(() => {
           // 메인 행 분배금 바로 아래 과표 표시 (tax-base.json에 있는 모든 종목)
+          // 2026/05/28 변경: 하드코딩 '26-4' → tax-base 가장 최근 row 자동 매칭 (분배금 일치)
+          //   - 월중/월말 사이클 무관하게 가장 최근 분배공시 데이터 사용
+          //   - 매월 갱신 시 키 변경 불필요 (영구 해결)
           if (e.unpaidThisMonth || e.divCurr == null) return '';
-          const rec = findTaxRecord(e.code, '26-4');
-          if (!rec) return '';
+          const recs = _taxBaseData ? _taxBaseData[e.code] : null;
+          if (!recs || recs.length === 0) return '';
+          const rec = recs[0]; // 가장 최근 row (배열 인덱스 0 = 최신)
           const divEtf = rec[1];
           let tb = Math.max(0, rec[2]); // 음수는 0 보정
           // ETF CHECK과 트래커 분배금 단위 차이 비율 보정
