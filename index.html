@@ -2832,6 +2832,46 @@ render();
 renderNewListings();
 renderUnpaidSection();
 
+// 신규상장 종목 ytd fallback (2026/05/28 영구 패치)
+// pr1=null인 신규상장 종목은 chart-prices.json의 첫 거래일 종가를 pr1 대신 사용해 ytd 계산
+// → "올해 수익률"이 "상장일 이후 누적 수익률"로 표시됨
+(async () => {
+  try {
+    if (!_allPricesData) {
+      if (!_allPricesPromise) {
+        _allPricesPromise = fetch("./data/chart-prices.json", { cache: "default" })
+          .then(r => r.ok ? r.json() : null)
+          .then(j => { _allPricesData = j; return j; })
+          .catch(() => null);
+      }
+      await _allPricesPromise;
+    }
+    if (!_allPricesData || !_allPricesData.data) return;
+    let needsRerender = false;
+    ETFS.forEach(o => {
+      // 조건: 신규상장 + pr1 없음 + pr3 있음 + chart 데이터 있음
+      if (o.pr1 != null || o.pr3 == null || o.ytd != null) return;
+      const codeData = _allPricesData.data[o.code];
+      if (!codeData || !codeData.length) return;
+      const lstPrice = codeData[0][1]; // 첫 거래일 종가
+      if (!lstPrice || lstPrice <= 0) return;
+      o.ytd = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
+      // ytdTR 재계산 (분배금 누적 / 상장일 종가)
+      if (o.divs) {
+        let divSum = 0;
+        Object.keys(o.divs).forEach(k => {
+          if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
+        });
+        o.ytdTR = +(o.ytd + (divSum / lstPrice * 100)).toFixed(2);
+      }
+      needsRerender = true;
+    });
+    if (needsRerender) render();
+  } catch (err) {
+    console.warn('[ytd fallback] chart-prices prefetch 실패:', err);
+  }
+})();
+
 function toggleNewListingsSection() {
   const btn = document.getElementById("newlstToggle");
   const sec = document.getElementById("newListingsSection");
