@@ -2407,7 +2407,11 @@ function rowHtml(e) {
           else { cls = 'partial'; txt = '과표 ' + fmtNum(tb, '원'); }
           return `<div class="row-tax ${cls}">${txt}</div>`;
         })()}
-        <div style="font-size:11.5px;">${fmtSign(e.divDiff,"원")}</div>
+        <div style="font-size:11.5px;">${
+          (e.divCurr != null && e.divPrev == null && !e.unpaidThisMonth)
+            ? '<span style="color:var(--orange);font-weight:600;">분배금 첫지급</span>'
+            : fmtSign(e.divDiff,"원")
+        }</div>
       </div>
     </td>
     <td class="num">
