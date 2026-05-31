@@ -2310,7 +2310,15 @@ function passes(e) {
 }
 
 function compare(a, b) {
-  if (!state.sort.k || !state.sort.dir) return 0; // 정렬 해제 = 원래 순서 유지
+  if (!state.sort.k || !state.sort.dir) {
+    // 정렬 해제 = 기본 정렬: 종목코드 오름차순
+    // 순수 숫자 코드(091170 등) 먼저, 문자 섞인 코드(0177R0/0192S0 등) 뒤로
+    // (2026/05/28 영구 패치) — ETFS 배열 추가 순서 의존 제거
+    const aHasLetter = /[A-Z]/i.test(a.code);
+    const bHasLetter = /[A-Z]/i.test(b.code);
+    if (aHasLetter !== bHasLetter) return aHasLetter ? 1 : -1;
+    return (a.code || "").localeCompare(b.code || "");
+  }
   const k = state.sort.k;
   let av = a[k], bv = b[k];
   if (k === "nm" || k === "dt") {
