@@ -1893,7 +1893,9 @@ const ETFS = RAW.map(r => {
   const nl = NEW_LISTINGS[o.code];
   if (nl) {
     o.lst = nl.lst;
-    o.retMLst = !!nl.retMLst;
+    // retMLst 라벨: 1달 데이터 완전(pr2 있음)이면 라벨 숨김, pr2 null(상장 직후)이면 표시
+    // (2026/05/28 영구 패치) — 한 달 지난 신규상장은 일반 종목과 동일 표기
+    o.retMLst = !!nl.retMLst && (o.pr2 == null);
     o.ytdLst = true;
     o.y2025Lst = "before"; // 2026년 상장 = 2025년 거래 없음
   } else {
@@ -2849,22 +2851,34 @@ renderUnpaidSection();
     if (!_allPricesData || !_allPricesData.data) return;
     let needsRerender = false;
     ETFS.forEach(o => {
-      // 조건: 신규상장 + pr1 없음 + pr3 있음 + chart 데이터 있음
-      if (o.pr1 != null || o.pr3 == null || o.ytd != null) return;
+      // 신규상장 fallback (pr3 + chart 데이터 필수)
+      if (o.pr3 == null) return;
       const codeData = _allPricesData.data[o.code];
       if (!codeData || !codeData.length) return;
       const lstPrice = codeData[0][1]; // 첫 거래일 종가
       if (!lstPrice || lstPrice <= 0) return;
-      o.ytd = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
-      // ytdTR 재계산 (분배금 누적 / 상장일 종가)
-      if (o.divs) {
-        let divSum = 0;
-        Object.keys(o.divs).forEach(k => {
-          if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
-        });
-        o.ytdTR = +(o.ytd + (divSum / lstPrice * 100)).toFixed(2);
+
+      // ytd fallback (pr1 null = 연초 데이터 없음)
+      if (o.pr1 == null && o.ytd == null) {
+        o.ytd = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
+        if (o.divs) {
+          let divSum = 0;
+          Object.keys(o.divs).forEach(k => {
+            if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
+          });
+          o.ytdTR = +(o.ytd + (divSum / lstPrice * 100)).toFixed(2);
+        }
+        needsRerender = true;
       }
-      needsRerender = true;
+
+      // retM fallback (pr2 null = 직전 사이클 종가 없음, 즉 상장 직후 첫 사이클)
+      // 상장일 ~ 분배공시일 기간 수익률 = ytd와 동일 기간
+      if (o.pr2 == null && o.retM == null) {
+        o.retM = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
+        const curDiv = (o.divs && o.divs["26-5"] != null) ? o.divs["26-5"] : 0;
+        o.retTR = +(o.retM + (curDiv / lstPrice * 100)).toFixed(2);
+        needsRerender = true;
+      }
     });
     if (needsRerender) render();
   } catch (err) {
