@@ -815,7 +815,7 @@ footer {
             <th class="sortable" data-k="dt">기준일</th>
             <th class="sortable num" data-k="pr3">공시일<br>종가</th>
             <th class="sortable num" data-k="mcCurr">시총</th>
-            <th class="num" data-grp="mc">시총 증감<br><span style="font-size:11px;"><span class="sublbl" data-k="mcDiff">증감액</span>/<span class="sublbl" data-k="mcDiffPct">증감률</span></span></th>
+            <th class="num" data-grp="mc">시총 증감<br><span style="font-size:11px;"><span class="sublbl" data-k="mcDiff">증감액</span>/<br><span class="sublbl" data-k="mcDiffPct">증감률</span></span></th>
             <th class="num" data-grp="div">분배금<br><span style="font-size:11px;"><span class="sublbl" data-k="divCurr">이번달</span>/<br><span class="sublbl" data-k="divDiff">전월대비</span></span></th>
             <th class="num" data-grp="dr">분배율<br><span style="font-size:11px;"><span class="sublbl" data-k="dr">당월</span>/<span class="sublbl" data-k="ax12">1년</span></span></th>
             <th class="num" data-grp="retM">이번달 수익률<br><span style="font-size:11px;"><span class="sublbl" data-k="retM">주가</span>/<span class="sublbl" data-k="retTR">TR</span></span></th>
@@ -2548,7 +2548,21 @@ function detailHtml(e) {
           const ex = _expenseData && _expenseData[e.code];
           if (!ex) return '';
           const f = x => parseFloat(x.toFixed(3));
-          return `<div class="pair"><span class="k">실부담비용(연)<br><span style="font-size:10px; color:var(--ink2); font-weight:500;">KOFIA ${_expenseBasis}</span></span><span class="v"><b>${f(ex[3])}%</b> <span style="font-size:11px; color:var(--ink2); font-weight:500;">(TER ${f(ex[1])}% + 매매 ${f(ex[2])}%)</span></span></div>`;
+          // 상장 1년 미만 판별 (KOFIA: 초기 편입매매로 매매수수료 과다 집계 가능)
+          let under1y = false;
+          if (_expenseBasisDate) {
+            const nl26 = (typeof NEW_LISTINGS !== 'undefined') && NEW_LISTINGS[e.code] && NEW_LISTINGS[e.code].lst;
+            const l25 = (typeof LISTING_2025 !== 'undefined') && LISTING_2025[e.code];
+            const lstStr = nl26 ? '2026/' + nl26 : (l25 ? '2025/' + l25 : null);
+            if (lstStr) {
+              const [y, m, d] = lstStr.split('/').map(Number);
+              const cutoff = new Date(_expenseBasisDate);
+              cutoff.setFullYear(cutoff.getFullYear() - 1);
+              under1y = new Date(y, m - 1, d) > cutoff;
+            }
+          }
+          const warn = under1y ? `<span style="display:block; font-size:10px; color:var(--orange); font-weight:600; margin-top:1px;">⚠ 상장 1년 미만 — 매매비용 과다 집계 가능</span>` : '';
+          return `<div class="pair"><span class="k">실부담비용(연)<br><span style="font-size:10px; color:var(--ink2); font-weight:500;">KOFIA ${_expenseBasis}</span></span><span class="v"><b>${f(ex[3])}%</b> <span style="font-size:11px; color:var(--ink2); font-weight:500;">(TER ${f(ex[1])}% + 매매 ${f(ex[2])}%)</span>${warn}</span></div>`;
         })()}
         ${(() => {
           const nl = (typeof NEW_LISTINGS !== 'undefined') ? NEW_LISTINGS[e.code] : null;
@@ -2705,6 +2719,7 @@ let _taxBasePromise = null;
 // 실부담비용 (data/expense.json — KOFIA 월말 기준, 값 = [총보수, TER, 매매수수료, 실부담비용] %/년)
 let _expenseData = null;
 let _expenseBasis = "";
+let _expenseBasisDate = "";
 function loadTaxBaseData() {
   if (_taxBaseData) return Promise.resolve(_taxBaseData);
   if (_taxBasePromise) return _taxBasePromise;
@@ -2716,6 +2731,7 @@ function loadTaxBaseData() {
     _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
     _expenseData = j3?.data || null;
     _expenseBasis = j3?.meta?.basisLabel || "";
+    _expenseBasisDate = j3?.meta?.basis || "";
     // fetch 완료 후 무조건 re-render (메인 행 + 펼쳐진 detail 모두 갱신)
     try { if (typeof render === 'function') render(); } catch(e) {}
     return _taxBaseData;
