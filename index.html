@@ -2659,7 +2659,7 @@ function detailHtml(e) {
         const sum = pos.reduce((a, h) => a + h[1], 0);
         const listHtml = hd.map((h, i) => {
           const color = (h[1] ?? 0) > 0 ? HOLD_PALETTE[pos.indexOf(h) % HOLD_PALETTE.length] : "#b8c4d4";
-          return `<div class="it"><span class="rk">${i+1}</span><span class="dot" style="background:${color}"></span><span class="nm">${h[0]}</span><span class="wt">${h[1] != null ? h[1].toFixed(2) + '%' : '—'}</span></div>`;
+          return `<div class="it"><span class="rk">${i+1}</span><span class="dot" style="background:${color}"></span><span class="nm" title="${String(h[0]).replace(/"/g, '&quot;')}">${h[0]}</span><span class="wt">${h[1] != null ? h[1].toFixed(2) + '%' : '—'}</span></div>`;
         }).join('');
         return `<div class="chart-hold-row full-row">${chartCard}
         <div class="detail-card">
