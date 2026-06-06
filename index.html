@@ -504,8 +504,8 @@ table.dt tbody tr.expand td {
 .chart-canvas-wrap {
   position: relative; height: 220px;
 }
-/* 주가차트(좌) + 구성종목 TOP10(우) 배치 */
-.chart-hold-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+/* 주가차트(좌) + 구성종목 TOP10(우) 배치 — 구성종목은 필요 폭만(420px), 나머지 전부 차트 */
+.chart-hold-row { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 10px; }
 .chart-hold-row.nohold { grid-template-columns: 1fr; }
 .hold-flex { display: flex; gap: 10px; align-items: center; }
 .hold-list { flex: 0 0 56%; min-width: 0; }
