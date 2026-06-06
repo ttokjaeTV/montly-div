@@ -504,6 +504,27 @@ table.dt tbody tr.expand td {
 .chart-canvas-wrap {
   position: relative; height: 220px;
 }
+/* 주가차트(좌) + 구성종목 TOP10(우) 배치 */
+.chart-hold-row { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; }
+.chart-hold-row.nohold { grid-template-columns: 1fr; }
+.hold-flex { display: flex; gap: 10px; align-items: center; }
+.hold-list { flex: 0 0 56%; min-width: 0; }
+.hold-list .it {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12.5px; padding: 3.5px 0; border-bottom: 1px dashed var(--line2);
+}
+.hold-list .it:last-child { border-bottom: none; }
+.hold-list .dot { width: 9px; height: 9px; border-radius: 3px; flex-shrink: 0; }
+.hold-list .rk { color: var(--ink2); font-weight: 600; font-size: 11.5px; width: 16px; text-align: right; flex-shrink: 0; }
+.hold-list .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hold-list .wt { font-weight: 700; flex-shrink: 0; }
+.hold-donut { width: 160px; flex-shrink: 0; position: relative; margin: 0 auto; }
+.hold-donut .center-label {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; pointer-events: none;
+}
+.hold-donut .center-label .t1 { font-size: 10.5px; color: var(--ink2); font-weight: 600; }
+.hold-donut .center-label .t2 { font-size: 15px; font-weight: 800; color: var(--ink); }
 .chart-loading {
   display: flex; align-items: center; justify-content: center;
   height: 100%; color: var(--ink2); font-size: 12.5px;
@@ -705,6 +726,7 @@ footer {
   .wrap .tag { font-size: 9.5px; padding: 1px 4px; }
   .wrap .dt-tag { font-size: 10.5px; padding: 2px 6px; }
   .wrap .detail-grid { grid-template-columns: 1fr !important; gap: 8px; }
+  .wrap .chart-hold-row { grid-template-columns: 1fr; }
   .wrap .divbar { grid-template-columns: repeat(7, 1fr) !important; }
   .wrap .detail-card { padding: 8px 10px; }
   .wrap .detail-card h4 { font-size: 12.5px; }
@@ -2613,7 +2635,9 @@ function detailHtml(e) {
         <div class="pair"><span class="k">올해 TR</span><span class="v">${fmtPct(e.ytdTR)}</span></div>
         <div class="pair"><span class="k">2025년도 TR</span><span class="v">${fmtPct(e.y2025)}${e.y2025Lst === true ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일('+e.y2025LstDate+') 이후]</span>' : ''}${e.y2025Lst === "before" ? ' <span style="color:var(--ink2); font-size:10px;">[2026 상장]</span>' : ''}</span></div>
       </div>
-      <div class="chart-card full-row">
+      ${(() => {
+        // 주가 차트(좌) + 구성종목 TOP10(우) — 구성종목 데이터 없으면 차트 전폭
+        const chartCard = `<div class="chart-card">
         <div class="chart-card-header">
           <h4>📈 주가 차트 <span style="color:var(--ink2); font-weight:500; font-size:12px;">· ${e.code}</span></h4>
           <div class="chart-period-tabs" data-code="${e.code}">
@@ -2628,7 +2652,28 @@ function detailHtml(e) {
           <div class="chart-loading" id="chart-loading-${e.code}">📈 차트 로딩 중...</div>
           <canvas id="chart-canvas-${e.code}" style="display:none;"></canvas>
         </div>
-      </div>
+      </div>`;
+        const hd = _holdingsData && _holdingsData[e.code];
+        if (!hd || !hd.length) return `<div class="chart-hold-row nohold full-row">${chartCard}</div>`;
+        const pos = hd.filter(h => (h[1] ?? 0) > 0);
+        const sum = pos.reduce((a, h) => a + h[1], 0);
+        const listHtml = hd.map((h, i) => {
+          const color = (h[1] ?? 0) > 0 ? HOLD_PALETTE[pos.indexOf(h) % HOLD_PALETTE.length] : "#b8c4d4";
+          return `<div class="it"><span class="rk">${i+1}</span><span class="dot" style="background:${color}"></span><span class="nm">${h[0]}</span><span class="wt">${h[1] != null ? h[1].toFixed(2) + '%' : '—'}</span></div>`;
+        }).join('');
+        return `<div class="chart-hold-row full-row">${chartCard}
+        <div class="detail-card">
+          <h4>🧺 구성종목 TOP10 <span style="color:var(--ink2); font-weight:500; font-size:12px;">· ${_holdingsDate} 수집</span></h4>
+          <div class="hold-flex">
+            <div class="hold-list">${listHtml}</div>
+            <div class="hold-donut">
+              <canvas id="donut-canvas-${e.code}"></canvas>
+              <div class="center-label"><span class="t1">TOP10</span><span class="t2">${Math.min(sum, 100).toFixed(1)}%</span></div>
+            </div>
+          </div>
+        </div>
+      </div>`;
+      })()}
       <div class="detail-card full-row">
         <h4>📅 월별 분배금 (12개월)</h4>
         <div class="divbar">${cells}</div>
@@ -2723,6 +2768,7 @@ function render() {
     });
     // 자동 로드 (펼쳐졌을 때)
     loadAndRenderChart(code, "1M");
+    renderHoldingsDonut(code);
   });
 }
 
@@ -2737,6 +2783,9 @@ let _expenseBasis = "";
 let _expenseBasisDate = "";
 // 전종목 상장일 (data/listing.json — 다음금융, 첫 거래일 교차검증 완료)
 let _listingData = null;
+// 구성종목 TOP10 (data/holdings.json — 네이버 ETF constituent API, 값 = [[종목명, 비중%] x 최대10])
+let _holdingsData = null;
+let _holdingsDate = "";
 function loadTaxBaseData() {
   if (_taxBaseData) return Promise.resolve(_taxBaseData);
   if (_taxBasePromise) return _taxBasePromise;
@@ -2744,13 +2793,16 @@ function loadTaxBaseData() {
     fetch("./data/tax-base.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch("./data/tax-base-extra.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch("./data/expense.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch("./data/listing.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
-  ]).then(([j1, j2, j3, j4]) => {
+    fetch("./data/listing.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch("./data/holdings.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]).then(([j1, j2, j3, j4, j5]) => {
     _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
     _expenseData = j3?.data || null;
     _expenseBasis = j3?.meta?.basisLabel || "";
     _expenseBasisDate = j3?.meta?.basis || "";
     _listingData = j4?.data || null;
+    _holdingsData = j5?.data || null;
+    _holdingsDate = j5?.meta?.fetched || "";
     // fetch 완료 후 무조건 re-render (메인 행 + 펼쳐진 detail 모두 갱신)
     try { if (typeof render === 'function') render(); } catch(e) {}
     return _taxBaseData;
@@ -2772,6 +2824,39 @@ loadTaxBaseData();
 // data/chart-prices.json은 GitHub Actions가 매일 한국시간 18:00에 자동 갱신.
 const chartDataCache = {};   // code -> 일별 시세 array (메모리 캐시)
 const chartInstances = {};   // code -> Chart instance
+
+// ==== 구성종목 TOP10 도넛 차트 (2026/06/06 추가) ====
+const HOLD_PALETTE = ["#e8862e","#f0a85c","#d33024","#e8b04b","#2a78c8","#6aa84f","#8a64b8","#3aa6a0","#c46410","#b0884e"];
+const donutInstances = {};   // code -> Chart instance
+function renderHoldingsDonut(code) {
+  const el = document.getElementById("donut-canvas-" + code);
+  const hd = _holdingsData && _holdingsData[code];
+  if (!el || !hd || !hd.length) return;
+  const pos = hd.filter(h => (h[1] ?? 0) > 0);
+  if (!pos.length) return;
+  const sum = pos.reduce((a, h) => a + h[1], 0);
+  const etc = Math.max(0, 100 - sum);
+  if (donutInstances[code]) donutInstances[code].destroy();
+  donutInstances[code] = new Chart(el.getContext("2d"), {
+    type: "doughnut",
+    data: {
+      labels: [...pos.map(h => h[0]), ...(etc > 0.01 ? ["기타"] : [])],
+      datasets: [{
+        data: [...pos.map(h => Math.min(h[1], 100)), ...(etc > 0.01 ? [etc] : [])],
+        backgroundColor: [...pos.map((_, i) => HOLD_PALETTE[i % HOLD_PALETTE.length]), ...(etc > 0.01 ? ["#ddd3c0"] : [])],
+        borderColor: "#fffdf7",
+        borderWidth: 1.5
+      }]
+    },
+    options: {
+      cutout: "62%",
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => " " + ctx.label + ": " + ctx.parsed.toFixed(2) + "%" } }
+      }
+    }
+  });
+}
 let _allPricesData = null;   // 전체 JSON 메모리 캐시
 let _allPricesPromise = null; // 동시 요청 방지용
 
