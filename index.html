@@ -2551,20 +2551,35 @@ function detailHtml(e) {
           // 상장 1년 미만 판별 (KOFIA: 초기 편입매매로 매매수수료 과다 집계 가능)
           let under1y = false;
           if (_expenseBasisDate) {
-            const nl26 = (typeof NEW_LISTINGS !== 'undefined') && NEW_LISTINGS[e.code] && NEW_LISTINGS[e.code].lst;
-            const l25 = (typeof LISTING_2025 !== 'undefined') && LISTING_2025[e.code];
-            const lstStr = nl26 ? '2026/' + nl26 : (l25 ? '2025/' + l25 : null);
-            if (lstStr) {
-              const [y, m, d] = lstStr.split('/').map(Number);
+            let lstDate = null;
+            const ld = _listingData && _listingData[e.code];
+            if (ld) {
+              lstDate = new Date(ld);
+            } else {
+              const nl26 = (typeof NEW_LISTINGS !== 'undefined') && NEW_LISTINGS[e.code] && NEW_LISTINGS[e.code].lst;
+              const l25 = (typeof LISTING_2025 !== 'undefined') && LISTING_2025[e.code];
+              const lstStr = nl26 ? '2026/' + nl26 : (l25 ? '2025/' + l25 : null);
+              if (lstStr) {
+                const [y, m, d] = lstStr.split('/').map(Number);
+                lstDate = new Date(y, m - 1, d);
+              }
+            }
+            if (lstDate) {
               const cutoff = new Date(_expenseBasisDate);
               cutoff.setFullYear(cutoff.getFullYear() - 1);
-              under1y = new Date(y, m - 1, d) > cutoff;
+              under1y = lstDate > cutoff;
             }
           }
           const warn = under1y ? `<span style="display:block; font-size:10px; color:var(--orange); font-weight:600; margin-top:1px;">⚠ 상장 1년 미만 — 매매비용 과다 집계 가능</span>` : '';
           return `<div class="pair"><span class="k">실부담비용(연)<br><span style="font-size:10px; color:var(--ink2); font-weight:500;">KOFIA ${_expenseBasis}</span></span><span class="v"><b>${f(ex[3])}%</b> <span style="font-size:11px; color:var(--ink2); font-weight:500;">(TER ${f(ex[1])}% + 매매 ${f(ex[2])}%)</span>${warn}</span></div>`;
         })()}
         ${(() => {
+          // 전종목 상장일 (listing.json 우선, 없으면 기존 NEW_LISTINGS/LISTING_2025)
+          const ld = _listingData && _listingData[e.code];
+          if (ld) {
+            const [y, m, d] = ld.split('-');
+            return `<div class="pair"><span class="k">상장일</span><span class="v">${y}/${+m}/${+d} 상장</span></div>`;
+          }
           const nl = (typeof NEW_LISTINGS !== 'undefined') ? NEW_LISTINGS[e.code] : null;
           const l25 = (typeof LISTING_2025 !== 'undefined') ? LISTING_2025[e.code] : null;
           if (nl && nl.lst) return `<div class="pair"><span class="k">상장일</span><span class="v">2026/${nl.lst} 상장</span></div>`;
@@ -2720,18 +2735,22 @@ let _taxBasePromise = null;
 let _expenseData = null;
 let _expenseBasis = "";
 let _expenseBasisDate = "";
+// 전종목 상장일 (data/listing.json — 다음금융, 첫 거래일 교차검증 완료)
+let _listingData = null;
 function loadTaxBaseData() {
   if (_taxBaseData) return Promise.resolve(_taxBaseData);
   if (_taxBasePromise) return _taxBasePromise;
   _taxBasePromise = Promise.all([
     fetch("./data/tax-base.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch("./data/tax-base-extra.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch("./data/expense.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
-  ]).then(([j1, j2, j3]) => {
+    fetch("./data/expense.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch("./data/listing.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]).then(([j1, j2, j3, j4]) => {
     _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
     _expenseData = j3?.data || null;
     _expenseBasis = j3?.meta?.basisLabel || "";
     _expenseBasisDate = j3?.meta?.basis || "";
+    _listingData = j4?.data || null;
     // fetch 완료 후 무조건 re-render (메인 행 + 펼쳐진 detail 모두 갱신)
     try { if (typeof render === 'function') render(); } catch(e) {}
     return _taxBaseData;
