@@ -749,12 +749,12 @@ footer {
         </svg>
         <span class="link-label">똑재TV</span>
       </a>
-      <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="link-btn naver" title="부의 자유 네이버 카페">
+      <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="link-btn naver" title="평생 ETF 투자 카페">
         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
           <rect width="24" height="24" rx="4" fill="#03C75A"/>
           <path fill="#fff" d="M14.93 5h3.07v14h-3.07L9.07 12.06V19H6V5h3.07L14.93 11.94z"/>
         </svg>
-        <span class="link-label">부의 자유 카페</span>
+        <span class="link-label">평생 ETF 투자 카페</span>
       </a>
       <button id="xlsxBtn" type="button" title="168개 전체 데이터를 엑셀(XLSX) 파일로 저장 — 자동필터 켜져있음" style="background:#1d6f42; color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);">📊 엑셀 저장</button>
       <div class="cnt"><b id="cntFiltered">0</b> / <span id="cntTotal">0</span> 종목 표시</div>
@@ -1333,16 +1333,16 @@ const RAW = [
 ["혼합","혼합","국내","채권혼합","0183V0","KIWOOM 삼성전자&SK하이닉스채권혼합50","삼성전자 25% + SK하이닉스 25% + 잔존만기 1년 이내 단기 국고통안채 50%","월중",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/4/21 신규상장 — 분배 미시작",""],
 ["주식","커버드콜","국내","국테크커","0176P0","FOCUS AI반도체위클리고정커버드콜","AI·반도체 + 위클리 콜옵션 매도","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/4/7 신규상장 (FOCUS 운용사)",""],
 ["주식","커버드콜","국내","국테크커","0190G0","KODEX 반도체타겟위클리커버드콜","KRX 반도체 타겟 9% 분배 + 위클리 커버드콜","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/5/12 신규상장 — 분배 미시작",""],
-["혼합","혼합","국내","채권혼합","0192S0","SOL 코스피200채권혼합50","코스피200 50% + KTB(국고채) 50% — 첫 분배 6월 말","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/5/19 신규상장",""],
-["주식","커버드콜","국내","국배커","0199C0","ACE 고배당주Plus커버드콜액티브","고배당주 20종목 + 코스피200 콜옵션 30% 매도 — 첫 분배 6월 말","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/2 신규상장",""],
-["혼합","커버드콜","국내","커채혼합","0203D0","PLUS 200위클리커버드콜채권혼합","코스피200 커버드콜 + 국채선물(KTB) 50:50 — 첫 분배 6월 말","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/2 신규상장",""],
-["주식","배당","국내","국내배당","0189Z0","DAISHIN343 금융&지주고배당","금융·지주 고배당 20종목 (배당수익률↑·PBR↓) — 첫 분배 7월 말 예정","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/9 신규상장 — 분배 미시작",""],
-["주식","커버드콜","국내","코스피커","0210E0","PLUS 200커버드콜액티브","코스피200 + 위클리 콜옵션 30% 고정 매도 — 첫 분배 7월 말 예정","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/23 신규상장 — 분배 미시작",""],
+["혼합","혼합","국내","채권혼합","0192S0","SOL 코스피200채권혼합50","코스피200 50% + KTB(국고채) 50%","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/5/19 신규상장",""],
+["주식","커버드콜","국내","국배커","0199C0","ACE 고배당주Plus커버드콜액티브","고배당주 20종목 + 코스피200 콜옵션 30% 매도","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/2 신규상장",""],
+["혼합","커버드콜","국내","커채혼합","0203D0","PLUS 200위클리커버드콜채권혼합","코스피200 커버드콜 + 국채선물(KTB) 50:50","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/2 신규상장",""],
+["주식","배당","국내","국내배당","0189Z0","DAISHIN343 금융&지주고배당","금융·지주 고배당 20종목 (배당수익률↑·PBR↓)","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/9 신규상장 — 분배 미시작",""],
+["주식","커버드콜","국내","코스피커","0210E0","PLUS 200커버드콜액티브","코스피200 + 위클리 콜옵션 30% 고정 매도","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/23 신규상장 — 분배 미시작",""],
 ["주식","커버드콜","국내","코스닥커","0198A0","KIWOOM 코스닥150커버드콜액티브","코스닥150 + 위클리 콜옵션 30% 고정 매도 (국내 첫 코스닥 커버드콜) — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/6/30 신규상장 — 분배 미시작",""],
 ["혼합","혼합","혼합","채권혼합","0216K0","KIWOOM 미국우주테크TOP2채권혼합50","미국 우주 2종목(각 25%) + 국고채·통안채 50% — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/7 신규상장 — 분배 미시작",""],
 ["주식","커버드콜","국내","코스피커","0219E0","KODEX 200커버드콜액티브","코스피200 + 콜옵션 매도 (신탁원본액 2,000억) — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/14 신규상장 — 분배 미시작",""],
 ["혼합","혼합","국내","채권혼합","0220A0","KIWOOM 현대차그룹TOP3채권혼합50","현대차그룹 3종목 + 단기 국고채·통안채 50% — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/14 신규상장 — 분배 미시작",""],
-["주식","배당","국내","국내배당","0222D0","KoAct 고배당액티브","코스피200 고배당 50종목 액티브 — 매월 마지막 영업일 분배 (첫 기준일 7/31)","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/28 신규상장 — 분배 미시작",""],
+["주식","배당","국내","국내배당","0222D0","KoAct 고배당액티브","코스피200 고배당 50종목 액티브 — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/28 신규상장 — 분배 미시작",""],
 ["주식","커버드콜","국내","코스닥커","0223A0","RISE 코스닥커버드콜액티브","코스닥150 + 위클리 콜옵션(목표 연 15%) 매도 — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/28 신규상장 — 분배 미시작",""],
 ["혼합","혼합","해외","채권혼합","0224X0","1Q 엔비디아알파벳미국채혼합50","엔비디아·알파벳 각 25%(주식 50%) + 미국 단기국채 50% — 매월 마지막 영업일 분배","월말",null,null,{},null,null,null,null,null,null,null,null,null,null,null,null,null,"2026/7/28 신규상장 — 분배 미시작",""],
 ["주식","배당","국내","국내배당","476850","KoAct 배당성장액티브","국내 배당성장 액티브","월말",null,null,{"25-12":null,"26-1":417,"26-2":null,"26-3":90},null,null,null,null,null,null,null,null,null,null,null,75.13,null,"2024/2/27 상장 (분기→월배당 전환)",""],
