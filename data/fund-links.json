@@ -1,0 +1,777 @@
+{
+"meta": {
+"source": "etf-selector/data/amc_links.json + krx_etf_master.json",
+"generated": "2026-08-09",
+"amcLinksUpdated": "2026-08-07",
+"krxDataDate": "2026-08-04",
+"total": 189,
+"deepLink": 185,
+"deepLinkRate": 97.9,
+"breakdown": {
+"deep_json": 137,
+"deep_isin": 33,
+"deep_ticker": 15,
+"home": 0,
+"naver": 4
+},
+"note": "단축코드 -> [공식 페이지 URL, 버튼 라벨]. 사전 해석 완료 — 트래커는 code만 있으면 됨"
+},
+"data": {
+"091170": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF08",
+"KODEX 공식 상세"
+],
+"104530": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=104530",
+"KIWOOM 공식 상세"
+],
+"136340": [
+"https://www.riseetf.co.kr/prod/finderDetail/4432",
+"RISE 공식 상세"
+],
+"153130": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF35",
+"KODEX 공식 상세"
+],
+"161510": [
+"https://www.plusetf.co.kr/product/detail?n=006273",
+"PLUS 공식 상세"
+],
+"166400": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7166400002",
+"TIGER 공식 상세"
+],
+"181480": [
+"https://www.aceetf.co.kr/fund/KR5101AJ9786",
+"ACE 공식 상세"
+],
+"182480": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7182480004",
+"TIGER 공식 상세"
+],
+"211900": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF46",
+"KODEX 공식 상세"
+],
+"214980": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF48",
+"KODEX 공식 상세"
+],
+"237370": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF58",
+"KODEX 공식 상세"
+],
+"245340": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7245340005",
+"TIGER 공식 상세"
+],
+"251600": [
+"https://www.plusetf.co.kr/product/detail?n=006298",
+"PLUS 공식 상세"
+],
+"273140": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF89",
+"KODEX 공식 상세"
+],
+"279530": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF96",
+"KODEX 공식 상세"
+],
+"284430": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETF99",
+"KODEX 공식 상세"
+],
+"289480": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7289480006",
+"TIGER 공식 상세"
+],
+"290080": [
+"https://www.riseetf.co.kr/prod/finderDetail/4478",
+"RISE 공식 상세"
+],
+"316300": [
+"https://www.aceetf.co.kr/fund/K55101CG5254",
+"ACE 공식 상세"
+],
+"322410": [
+"https://www.hanaroetf.com/fund/45C31C81B10C4B4A",
+"HANARO 공식 상세"
+],
+"329200": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7329200000",
+"TIGER 공식 상세"
+],
+"329650": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFC3",
+"KODEX 공식 상세"
+],
+"329660": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFC2",
+"KODEX 공식 상세"
+],
+"329670": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFC1",
+"KODEX 공식 상세"
+],
+"332610": [
+"https://www.plusetf.co.kr/product/detail?n=006328",
+"PLUS 공식 상세"
+],
+"332620": [
+"https://www.plusetf.co.kr/product/detail?n=006329",
+"PLUS 공식 상세"
+],
+"336160": [
+"https://www.riseetf.co.kr/prod/finderDetail/4500",
+"RISE 공식 상세"
+],
+"341850": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7341850006",
+"TIGER 공식 상세"
+],
+"352540": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFD1",
+"KODEX 공식 상세"
+],
+"352560": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFC9",
+"KODEX 공식 상세"
+],
+"373790": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=373790",
+"KIWOOM 공식 상세"
+],
+"402970": [
+"https://www.aceetf.co.kr/fund/K55101DN4471",
+"ACE 공식 상세"
+],
+"423160": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFG6",
+"KODEX 공식 상세"
+],
+"429000": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7429000003",
+"TIGER 공식 상세"
+],
+"429740": [
+"https://www.plusetf.co.kr/product/detail?n=006347",
+"PLUS 공식 상세"
+],
+"432840": [
+"https://www.hanaroetf.com/fund/6841F2BA9FF04317",
+"HANARO 공식 상세"
+],
+"433330": [
+"https://www.soletf.com/ko/fund/etf/210930",
+"SOL 공식 상세"
+],
+"437070": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFG4",
+"KODEX 공식 상세"
+],
+"437080": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFG5",
+"KODEX 공식 상세"
+],
+"440340": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7440340008",
+"TIGER 공식 상세"
+],
+"441640": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFH4",
+"KODEX 공식 상세"
+],
+"441680": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7441680006",
+"TIGER 공식 상세"
+],
+"441800": [
+"https://timeetf.co.kr/m11_view.php?idx=12",
+"TIME 공식 상세"
+],
+"446720": [
+"https://www.soletf.com/ko/fund/etf/210942",
+"SOL 공식 상세"
+],
+"448100": [
+"https://www.wooriam.kr/investment/etf-view/5B24GT7Kv9MqFAdv",
+"WON 공식 상세"
+],
+"448330": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFH9",
+"KODEX 공식 상세"
+],
+"452360": [
+"https://www.soletf.com/ko/fund/etf/210972",
+"SOL 공식 상세"
+],
+"453330": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"453850": [
+"https://www.aceetf.co.kr/fund/K55101E03860",
+"ACE 공식 상세"
+],
+"455030": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFJ3",
+"KODEX 공식 상세"
+],
+"455660": [
+"https://www.aceetf.co.kr/fund/K55101E13018",
+"ACE 공식 상세"
+],
+"458260": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7458260007",
+"TIGER 공식 상세"
+],
+"458730": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7458730009",
+"TIGER 공식 상세"
+],
+"458750": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7458750007",
+"TIGER 공식 상세"
+],
+"458760": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7458760006",
+"TIGER 공식 상세"
+],
+"459580": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFJ8",
+"KODEX 공식 상세"
+],
+"460660": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"460960": [
+"https://www.aceetf.co.kr/fund/K55101E30004",
+"ACE 공식 상세"
+],
+"464470": [
+"https://www.plusetf.co.kr/product/detail?n=006204",
+"PLUS 공식 상세"
+],
+"465670": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7465670008",
+"TIGER 공식 상세"
+],
+"466940": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7466940004",
+"TIGER 공식 상세"
+],
+"468370": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFK9",
+"KODEX 공식 상세"
+],
+"468380": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFL2",
+"KODEX 공식 상세"
+],
+"468630": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFL1",
+"KODEX 공식 상세"
+],
+"471460": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=471460",
+"KIWOOM 공식 상세"
+],
+"472150": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7472150002",
+"TIGER 공식 상세"
+],
+"472830": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"472870": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"473330": [
+"https://www.soletf.com/ko/fund/etf/211044",
+"SOL 공식 상세"
+],
+"474220": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7474220001",
+"TIGER 공식 상세"
+],
+"475080": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFM1",
+"KODEX 공식 상세"
+],
+"475380": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"475720": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"476550": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7476550009",
+"TIGER 공식 상세"
+],
+"476690": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7476690003",
+"TIGER 공식 상세"
+],
+"476750": [
+"https://www.aceetf.co.kr/fund/K55101E91790",
+"ACE 공식 상세"
+],
+"476760": [
+"https://www.aceetf.co.kr/fund/K55101E91865",
+"ACE 공식 상세"
+],
+"476800": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFM4",
+"KODEX 공식 상세"
+],
+"480020": [
+"https://www.aceetf.co.kr/fund/K55101E97763",
+"ACE 공식 상세"
+],
+"480030": [
+"https://www.aceetf.co.kr/fund/K55101E97755",
+"ACE 공식 상세"
+],
+"480040": [
+"https://www.aceetf.co.kr/fund/K55101E96450",
+"ACE 공식 상세"
+],
+"480460": [
+"https://www.wooriam.kr/investment/etf-view/8HmZjHHDBz5p7dLm",
+"WON 공식 상세"
+],
+"481050": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFM7",
+"KODEX 공식 상세"
+],
+"481060": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFM9",
+"KODEX 공식 상세"
+],
+"481340": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"482730": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7482730009",
+"TIGER 공식 상세"
+],
+"483280": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFN2",
+"KODEX 공식 상세"
+],
+"483290": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFN1",
+"KODEX 공식 상세"
+],
+"484790": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFN5",
+"KODEX 공식 상세"
+],
+"484880": [
+"https://www.soletf.com/ko/fund/etf/211061",
+"SOL 공식 상세"
+],
+"486290": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7486290000",
+"TIGER 공식 상세"
+],
+"487950": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFN4",
+"KODEX 공식 상세"
+],
+"489030": [
+"https://www.plusetf.co.kr/product/detail?n=006370",
+"PLUS 공식 상세"
+],
+"489250": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFN9",
+"KODEX 공식 상세"
+],
+"490490": [
+"https://www.soletf.com/ko/fund/etf/211068",
+"SOL 공식 상세"
+],
+"490590": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"490600": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"491620": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"493420": [
+"https://www.soletf.com/ko/fund/etf/211069",
+"SOL 공식 상세"
+],
+"493810": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7493810006",
+"TIGER 공식 상세"
+],
+"494210": [
+"https://www.soletf.com/ko/fund/etf/211064",
+"SOL 공식 상세"
+],
+"494300": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFO6",
+"KODEX 공식 상세"
+],
+"494420": [
+"https://www.plusetf.co.kr/product/detail?n=006376",
+"PLUS 공식 상세"
+],
+"495040": [
+"https://www.plusetf.co.kr/product/detail?n=006378",
+"PLUS 공식 상세"
+],
+"495050": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"495230": [
+"https://www.samsungactive.co.kr/etf/view.do?id=2ETFP3",
+"KOACT 공식 상세"
+],
+"495330": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=11",
+"1Q 공식 상세"
+],
+"495850": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFP2",
+"KODEX 공식 상세"
+],
+"496080": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7496080003",
+"TIGER 공식 상세"
+],
+"497780": [
+"https://www.samsungactive.co.kr/etf/view.do?id=2ETFO9",
+"KOACT 공식 상세"
+],
+"497880": [
+"https://www.soletf.com/ko/fund/etf/211074",
+"SOL 공식 상세"
+],
+"498400": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFP4",
+"KODEX 공식 상세"
+],
+"498410": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFP1",
+"KODEX 공식 상세"
+],
+"498860": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"499150": [
+"https://www.soletf.com/ko/fund/etf/211071",
+"SOL 공식 상세"
+],
+"499660": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR7499660009",
+"TIGER 공식 상세"
+],
+"0000D0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70000D0009",
+"TIGER 공식 상세"
+],
+"0004G0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=12",
+"1Q 공식 상세"
+],
+"0005A0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFP5",
+"KODEX 공식 상세"
+],
+"0008S0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70008S0004",
+"TIGER 공식 상세"
+],
+"0013P0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0013R0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0015E0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0015E0",
+"KIWOOM 공식 상세"
+],
+"0015F0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0015F0",
+"KIWOOM 공식 상세"
+],
+"0018C0": [
+"https://www.plusetf.co.kr/product/detail?n=006382",
+"PLUS 공식 상세"
+],
+"0022T0": [
+"https://www.soletf.com/ko/fund/etf/211077",
+"SOL 공식 상세"
+],
+"0036D0": [
+"https://timeetf.co.kr/m11_view.php?idx=18",
+"TIME 공식 상세"
+],
+"0040X0": [
+"https://www.soletf.com/ko/fund/etf/211089",
+"SOL 공식 상세"
+],
+"0040Y0": [
+"https://www.soletf.com/ko/fund/etf/211088",
+"SOL 공식 상세"
+],
+"0046A0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70046A0008",
+"TIGER 공식 상세"
+],
+"0046Y0": [
+"https://www.aceetf.co.kr/fund/K55101EK7278",
+"ACE 공식 상세"
+],
+"0048J0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFR3",
+"KODEX 공식 상세"
+],
+"0049K0": [
+"https://www.aceetf.co.kr/fund/K55101EK7294",
+"ACE 공식 상세"
+],
+"0049M0": [
+"https://www.aceetf.co.kr/fund/K55101EK7344",
+"ACE 공식 상세"
+],
+"0052D0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70052D0006",
+"TIGER 공식 상세"
+],
+"0073X0": [
+"https://finance.naver.com/item/main.naver?code=0073X0",
+"종목 정보 (네이버)"
+],
+"0080X0": [
+"https://www.soletf.com/ko/fund/etf/211093",
+"SOL 공식 상세"
+],
+"0084D0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0084D0",
+"KIWOOM 공식 상세"
+],
+"0084E0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0084E0",
+"KIWOOM 공식 상세"
+],
+"0085N0": [
+"https://www.aceetf.co.kr/fund/K55101EL9174",
+"ACE 공식 상세"
+],
+"0085P0": [
+"https://www.aceetf.co.kr/fund/K55101EL9166",
+"ACE 공식 상세"
+],
+"0086B0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70086B0008",
+"TIGER 공식 상세"
+],
+"0086C0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70086C0007",
+"TIGER 공식 상세"
+],
+"0089C0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFP9",
+"KODEX 공식 상세"
+],
+"0089D0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFS1",
+"KODEX 공식 상세"
+],
+"0091C0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFS2",
+"KODEX 공식 상세"
+],
+"0094L0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0094M0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0097L0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0097L0",
+"KIWOOM 공식 상세"
+],
+"0098N0": [
+"https://www.plusetf.co.kr/product/detail?n=006392",
+"PLUS 공식 상세"
+],
+"0104N0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70104N0002",
+"TIGER 공식 상세"
+],
+"0104P0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70104P0000",
+"TIGER 공식 상세"
+],
+"0105E0": [
+"https://www.soletf.com/ko/fund/etf/211097",
+"SOL 공식 상세"
+],
+"0107F0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0107F0",
+"KIWOOM 공식 상세"
+],
+"0111J0": [
+"https://www.hanaroetf.com/fund/8B788EE0BB4342A9",
+"HANARO 공식 상세"
+],
+"0115C0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0128D0": [
+"https://www.plusetf.co.kr/product/detail?n=006394",
+"PLUS 공식 상세"
+],
+"0132K0": [
+"https://www.plusetf.co.kr/product/detail?n=006395",
+"PLUS 공식 상세"
+],
+"0138T0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0139P0": [
+"https://www.aceetf.co.kr/fund/K55101EQ7660",
+"ACE 공식 상세"
+],
+"0144L0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFT4",
+"KODEX 공식 상세"
+],
+"0152E0": [
+"https://www.soletf.com/ko/fund/etf/211104",
+"SOL 공식 상세"
+],
+"0153K0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFT8",
+"KODEX 공식 상세"
+],
+"0153P0": [
+"https://www.aceetf.co.kr/fund/K55101EP9774",
+"ACE 공식 상세"
+],
+"0153X0": [
+"https://www.plusetf.co.kr/product/detail?n=006397",
+"PLUS 공식 상세"
+],
+"0167B0": [
+"https://www.soletf.com/ko/fund/etf/211107",
+"SOL 공식 상세"
+],
+"0174J0": [
+"https://finance.naver.com/item/main.naver?code=0174J0",
+"종목 정보 (네이버)"
+],
+"0177R0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70177R0000",
+"TIGER 공식 상세"
+],
+"0127T0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0127T0",
+"KIWOOM 공식 상세"
+],
+"0127V0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0127V0",
+"KIWOOM 공식 상세"
+],
+"0177N0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFU9",
+"KODEX 공식 상세"
+],
+"0183V0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0183V0",
+"KIWOOM 공식 상세"
+],
+"0176P0": [
+"https://finance.naver.com/item/main.naver?code=0176P0",
+"종목 정보 (네이버)"
+],
+"0190G0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFV1",
+"KODEX 공식 상세"
+],
+"0192S0": [
+"https://www.soletf.com/ko/fund/etf/211111",
+"SOL 공식 상세"
+],
+"0199C0": [
+"https://www.aceetf.co.kr/fund/K55101EV6285",
+"ACE 공식 상세"
+],
+"0203D0": [
+"https://www.plusetf.co.kr/product/detail?n=006404",
+"PLUS 공식 상세"
+],
+"0189Z0": [
+"https://finance.naver.com/item/main.naver?code=0189Z0",
+"종목 정보 (네이버)"
+],
+"0210E0": [
+"https://www.plusetf.co.kr/product/detail?n=006407",
+"PLUS 공식 상세"
+],
+"0198A0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0198A0",
+"KIWOOM 공식 상세"
+],
+"0216K0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0216K0",
+"KIWOOM 공식 상세"
+],
+"0219E0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFV8",
+"KODEX 공식 상세"
+],
+"0220A0": [
+"https://www.kiwoometf.com/service/etf/KO02010200M?gcode=0220A0",
+"KIWOOM 공식 상세"
+],
+"0222D0": [
+"https://www.samsungactive.co.kr/etf/view.do?id=2ETFW1",
+"KoAct 공식 상세"
+],
+"0223A0": [
+"https://www.riseetf.co.kr/prod/finderDetail/44",
+"RISE 공식 상세"
+],
+"0224X0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=34",
+"1Q 공식 상세"
+],
+"476850": [
+"https://www.samsungactive.co.kr/etf/view.do?id=2ETFM2",
+"KOACT 공식 상세"
+],
+"0057H0": [
+"https://www.plusetf.co.kr/product/detail?n=006387",
+"PLUS 공식 상세"
+],
+"0089B0": [
+"https://www.plusetf.co.kr/product/detail?n=006389",
+"PLUS 공식 상세"
+]
+}
+}

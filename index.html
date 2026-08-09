@@ -535,6 +535,24 @@ table.dt tbody tr.expand td {
   border-radius: 10px;
   padding: 10px 12px;
 }
+/* 운용사 공식 페이지 버튼 (상세 패널 최상단) */
+.amc-link {
+  display:flex; align-items:center; justify-content:center; gap:6px;
+  width:100%; box-sizing:border-box;
+  margin: 0 0 10px;
+  padding: 9px 12px;
+  background:#fff;
+  border:1px solid var(--orange);
+  border-radius: 10px;
+  color: var(--orange);
+  font-size: 13.5px; font-weight: 700;
+  text-decoration: none;
+  transition: background .15s, color .15s;
+}
+.amc-link:hover { background: var(--orange); color:#fff; }
+.amc-link .sub { font-size: 11.5px; font-weight: 600; opacity: .8; }
+.amc-link.fallback { border-color: var(--line); color: var(--ink2); }
+.amc-link.fallback:hover { background: var(--line2); color: var(--ink); }
 .detail-card h4 {
   font-size: 14px; margin: 0 0 8px;
   color: #5a4530; font-weight: 700;
@@ -731,6 +749,8 @@ footer {
   .wrap .detail-card { padding: 8px 10px; }
   .wrap .detail-card h4 { font-size: 12.5px; }
   .wrap .detail-card .pair { font-size: 12px; }
+  .wrap .amc-link { padding: 8px 10px; font-size: 12.5px; margin-bottom: 8px; }
+  .wrap .amc-link .sub { font-size: 10.5px; }
 }
 </style>
 </head>
@@ -2615,6 +2635,7 @@ function detailHtml(e) {
   const sum = Object.values(e.divs||{}).filter(v=>v!=null).reduce((a,b)=>a+b,0);
   return `<tr class="expand"><td colspan="10">
     <div class="expand-inner">
+    ${amcLinkHtml(e.code)}
     <div class="detail-grid">
       <div class="detail-card">
         <h4>📋 종목 정보</h4>
@@ -2842,6 +2863,8 @@ let _listingData = null;
 // 구성종목 TOP10 (data/holdings.json — 네이버 ETF constituent API, 값 = [[종목명, 비중%] x 최대10])
 let _holdingsData = null;
 let _holdingsDate = "";
+// 운용사 공식 페이지 링크 (data/fund-links.json — 단축코드 = [URL, 버튼 라벨], 사전 해석 완료)
+let _fundLinkData = null;
 function loadTaxBaseData() {
   if (_taxBaseData) return Promise.resolve(_taxBaseData);
   if (_taxBasePromise) return _taxBasePromise;
@@ -2850,8 +2873,9 @@ function loadTaxBaseData() {
     fetch("./data/tax-base-extra.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch("./data/expense.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
     fetch("./data/listing.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
-    fetch("./data/holdings.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
-  ]).then(([j1, j2, j3, j4, j5]) => {
+    fetch("./data/holdings.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null),
+    fetch("./data/fund-links.json", { cache: "default" }).then(r => r.ok ? r.json() : null).catch(() => null)
+  ]).then(([j1, j2, j3, j4, j5, j6]) => {
     _taxBaseData = { ...(j1?.data || {}), ...(j2?.data || {}) };
     _expenseData = j3?.data || null;
     _expenseBasis = j3?.meta?.basisLabel || "";
@@ -2859,11 +2883,26 @@ function loadTaxBaseData() {
     _listingData = j4?.data || null;
     _holdingsData = j5?.data || null;
     _holdingsDate = j5?.meta?.fetched || "";
+    _fundLinkData = j6?.data || null;
     // fetch 완료 후 무조건 re-render (메인 행 + 펼쳐진 detail 모두 갱신)
     try { if (typeof render === 'function') render(); } catch(e) {}
     return _taxBaseData;
   });
   return _taxBasePromise;
+}
+// 단축코드 → 운용사 공식 페이지 { url, label, deep }
+// fund-links.json은 사전 해석된 평면 맵이라 code 하나만 있으면 된다.
+// (생성: python scripts/build_fund_links.py — etf-selector의 amc_links.json + krx_etf_master.json 기반)
+function fundLink(code) {
+  const rec = _fundLinkData && _fundLinkData[code];
+  if (rec) return { url: rec[0], label: rec[1], deep: !rec[0].includes("finance.naver.com") };
+  return { url: "https://finance.naver.com/item/main.naver?code=" + code, label: "종목 정보 (네이버)", deep: false };
+}
+function amcLinkHtml(code) {
+  if (!_fundLinkData) return "";  // 로드 전에는 숨김 (로드 완료 시 자동 re-render)
+  const L = fundLink(code);
+  return `<a class="amc-link${L.deep ? "" : " fallback"}" href="${L.url}" target="_blank" rel="noopener noreferrer">`
+    + `🏛 ${L.label} <span class="sub">바로가기 ↗</span></a>`;
 }
 // 분배락 월 키 (예: "26-4") → 해당 분배의 과세표준액 record
 function findTaxRecord(code, monthKey) {
