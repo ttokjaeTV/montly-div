@@ -1,9 +1,9 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-08-09",
-"amcLinksUpdated": "2026-08-07",
-"krxDataDate": "2026-08-04",
+"generated": "2026-08-13",
+"amcLinksUpdated": "2026-08-11",
+"krxDataDate": "2026-08-11",
 "total": 189,
 "deepLink": 185,
 "deepLinkRate": 97.9,
@@ -206,7 +206,7 @@
 "SOL 공식 상세"
 ],
 "453330": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44E3",
 "RISE 공식 상세"
 ],
 "453850": [
@@ -242,7 +242,7 @@
 "KODEX 공식 상세"
 ],
 "460660": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44E6",
 "RISE 공식 상세"
 ],
 "460960": [
@@ -282,11 +282,11 @@
 "TIGER 공식 상세"
 ],
 "472830": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44F8",
 "RISE 공식 상세"
 ],
 "472870": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44F9",
 "RISE 공식 상세"
 ],
 "473330": [
@@ -302,11 +302,11 @@
 "KODEX 공식 상세"
 ],
 "475380": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44G0",
 "RISE 공식 상세"
 ],
 "475720": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44G3",
 "RISE 공식 상세"
 ],
 "476550": [
@@ -354,7 +354,7 @@
 "KODEX 공식 상세"
 ],
 "481340": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44G6",
 "RISE 공식 상세"
 ],
 "482730": [
@@ -398,15 +398,15 @@
 "SOL 공식 상세"
 ],
 "490590": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44H1",
 "RISE 공식 상세"
 ],
 "490600": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44H2",
 "RISE 공식 상세"
 ],
 "491620": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44H5",
 "RISE 공식 상세"
 ],
 "493420": [
@@ -434,7 +434,7 @@
 "PLUS 공식 상세"
 ],
 "495050": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44H7",
 "RISE 공식 상세"
 ],
 "495230": [
@@ -470,7 +470,7 @@
 "KODEX 공식 상세"
 ],
 "498860": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44H8",
 "RISE 공식 상세"
 ],
 "499150": [
@@ -498,11 +498,11 @@
 "TIGER 공식 상세"
 ],
 "0013P0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44I2",
 "RISE 공식 상세"
 ],
 "0013R0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44I1",
 "RISE 공식 상세"
 ],
 "0015E0": [
@@ -602,11 +602,11 @@
 "KODEX 공식 상세"
 ],
 "0094L0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44J1",
 "RISE 공식 상세"
 ],
 "0094M0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44J2",
 "RISE 공식 상세"
 ],
 "0097L0": [
@@ -638,7 +638,7 @@
 "HANARO 공식 상세"
 ],
 "0115C0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44J6",
 "RISE 공식 상세"
 ],
 "0128D0": [
@@ -650,7 +650,7 @@
 "PLUS 공식 상세"
 ],
 "0138T0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44J9",
 "RISE 공식 상세"
 ],
 "0139P0": [
@@ -754,7 +754,7 @@
 "KoAct 공식 상세"
 ],
 "0223A0": [
-"https://www.riseetf.co.kr/prod/finderDetail/44",
+"https://www.riseetf.co.kr/prod/finderDetail/44K8",
 "RISE 공식 상세"
 ],
 "0224X0": [
