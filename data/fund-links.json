@@ -1,15 +1,15 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-08-13",
-"amcLinksUpdated": "2026-08-11",
-"krxDataDate": "2026-08-11",
-"total": 189,
-"deepLink": 185,
+"generated": "2026-08-28",
+"amcLinksUpdated": "2026-08-27",
+"krxDataDate": "2026-08-27",
+"total": 190,
+"deepLink": 186,
 "deepLinkRate": 97.9,
 "breakdown": {
 "deep_json": 137,
-"deep_isin": 33,
+"deep_isin": 34,
 "deep_ticker": 15,
 "home": 0,
 "naver": 4
@@ -521,10 +521,6 @@
 "https://www.soletf.com/ko/fund/etf/211077",
 "SOL 공식 상세"
 ],
-"0036D0": [
-"https://timeetf.co.kr/m11_view.php?idx=18",
-"TIME 공식 상세"
-],
 "0040X0": [
 "https://www.soletf.com/ko/fund/etf/211089",
 "SOL 공식 상세"
@@ -760,6 +756,14 @@
 "0224X0": [
 "https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=34",
 "1Q 공식 상세"
+],
+"0233A0": [
+"https://www.aceetf.co.kr/fund/K55101EY7603",
+"ACE 공식 상세"
+],
+"0233J0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70233J0002",
+"TIGER 공식 상세"
 ],
 "476850": [
 "https://www.samsungactive.co.kr/etf/view.do?id=2ETFM2",
