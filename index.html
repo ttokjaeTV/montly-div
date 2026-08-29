@@ -2615,6 +2615,7 @@ function rowHtml(e) {
 }
 
 function detailHtml(e) {
+  // 표시용 12+1개월 축 — 연도가 바뀌는 사이클(27-1)에 손으로 갱신 (동적 파생 대상 아님)
   const months = ["25-12","26-1","26-2","26-3","26-4","26-5","26-6","26-7","26-8","26-9","26-10","26-11","26-12"];
   const monthLabels = ["'25.12","'26.1","'26.2","'26.3","'26.4","'26.5","'26.6","'26.7","'26.8","'26.9","'26.10","'26.11","'26.12"];
   const latestKey = Object.keys(e.divs||{}).filter(k=>e.divs[k]!=null).pop();
@@ -3176,7 +3177,9 @@ renderUnpaidSection();
       // 상장일 ~ 분배공시일 기간 수익률 = ytd와 동일 기간
       if (o.pr2 == null && o.retM == null) {
         o.retM = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
-        const curDiv = (o.divs && o.divs[(o.dt==="월중"?"26-7":"26-6")] != null) ? o.divs[(o.dt==="월중"?"26-7":"26-6")] : 0;
+        // 사이클 자동 파생: 월말 사이클(또는 월중 ETF)은 당월, 월중 사이클의 월말 ETF는 직전월
+        const fbKey = (CYCLE_TYPE === "월말" || o.dt === "월중") ? CYCLE_KEY : monthKeyShift(CYCLE_KEY, 1);
+        const curDiv = (o.divs && o.divs[fbKey] != null) ? o.divs[fbKey] : 0;
         o.retTR = +(o.retM + (curDiv / lstPrice * 100)).toFixed(2);
         needsRerender = true;
       }
