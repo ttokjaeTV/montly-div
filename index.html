@@ -1910,6 +1910,7 @@ const ETF_DIST_OVERRIDE = {
 // (2026-08 사고: prevKey가 26-6에 멈춰 있어 8월 분배금을 6월과 비교 → 전월대비가 전부 틀렸음)
 const CYCLE_KEY  = "26-8";
 const CYCLE_TYPE = "월말";
+const CYCLE_YEAR_PREFIX = CYCLE_KEY.split("-")[0] + "-";   // "26-" — 올해 분배합 필터용 (자동 파생)
 function monthKeyShift(key, n) {
   let [y, m] = key.split("-").map(Number);
   m -= n;
@@ -2030,7 +2031,7 @@ const ETFS = RAW.map(r => {
   if (o.pr1 != null && o.pr3 != null && o.divs) {
     let divSum = 0;
     Object.keys(o.divs).forEach(k => {
-      if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
+      if (k.startsWith(CYCLE_YEAR_PREFIX) && o.divs[k] != null) divSum += o.divs[k];
     });
     o.ytdTR = +(o.ytd + (divSum / o.pr1 * 100)).toFixed(2);
   }
@@ -3165,7 +3166,7 @@ renderUnpaidSection();
         if (o.divs) {
           let divSum = 0;
           Object.keys(o.divs).forEach(k => {
-            if (k.startsWith("26-") && o.divs[k] != null) divSum += o.divs[k];
+            if (k.startsWith(CYCLE_YEAR_PREFIX) && o.divs[k] != null) divSum += o.divs[k];
           });
           o.ytdTR = +(o.ytd + (divSum / lstPrice * 100)).toFixed(2);
         }
