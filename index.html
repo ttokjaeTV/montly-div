@@ -1904,6 +1904,20 @@ const ETF_DIST_OVERRIDE = {
 };
 
 // Convert raw rows to objects.
+// ==== ★ 사이클 상수 — 매 사이클 이 2개만 바꾼다 =====================================
+// CYCLE_KEY  : 이번 분배 사이클의 월키 ("26-8")
+// CYCLE_TYPE : 이번 사이클 종류 ("월중" | "월말")
+// 나머지 월키(prevKey·prevPriorKeys·prevFallbackKey·baselineKey)는 전부 여기서 자동 파생된다.
+// (2026-08 사고: prevKey가 26-6에 멈춰 있어 8월 분배금을 6월과 비교 → 전월대비가 전부 틀렸음)
+const CYCLE_KEY  = "26-8";
+const CYCLE_TYPE = "월말";
+function monthKeyShift(key, n) {
+  let [y, m] = key.split("-").map(Number);
+  m -= n;
+  while (m < 1) { m += 12; y -= 1; }
+  return y + "-" + m;
+}
+
 const ETFS = RAW.map(r => {
   const o = {};
   HEADERS.forEach((h, i) => o[h] = r[i]);
@@ -1952,14 +1966,14 @@ const ETFS = RAW.map(r => {
     o.discClose = canFallback ? o.pr3 : null;
   }
   // 당월 분배금 + 분배율 + 1년 분배율 적용 (매월 갱신 시 키 변경)
-  // MERGE 우선: 월중 ETF=6월(26-6), 월말 ETF=5월(26-5) 값 누적 보존
+  // MERGE 우선: 이번 사이클 미출력 종목은 기존 DIVIDEND_UPDATES 값 누적 보존
   const isUpdatedThisCycle = (typeof DIVIDEND_UPDATES_MERGE !== 'undefined' && DIVIDEND_UPDATES_MERGE[o.code]);
   const dupd = isUpdatedThisCycle ? DIVIDEND_UPDATES_MERGE[o.code] : DIVIDEND_UPDATES[o.code];
   // 사이클별 동적 월키 (2026/06 월중: 월중 ETF=26-6/직전 26-5, 월말 ETF=26-5/직전 26-4)
-  const curKey = "26-8";   // 2026/7 월말 사이클: 월중 ETF=7/13 · 월말 ETF=7/29 (둘 다 26-7)
-  const prevKey = "26-6";
-  const prevPriorKeys = ["26-5","26-4","26-3","26-2","26-1","25-12","25-11","25-10","25-9","25-8"];
-  const prevFallbackKey = "26-5";
+  const curKey = CYCLE_KEY;
+  const prevKey = monthKeyShift(CYCLE_KEY, 1);
+  const prevPriorKeys = [2,3,4,5,6,7,8,9,10,11].map(n => monthKeyShift(CYCLE_KEY, n));
+  const prevFallbackKey = monthKeyShift(CYCLE_KEY, 2);
   o.unpaidThisMonth = false;  // 미지급 플래그 (당월 분배공시일에 의도적 미지급)
   // 1년 미만 신규상장 → 1년 분배율을 연율화 추정한 경우 마커 표시
   o.ax12Estimated = (typeof AX12_ESTIMATED !== 'undefined' && AX12_ESTIMATED.has(o.code));
@@ -1968,7 +1982,7 @@ const ETFS = RAW.map(r => {
     o.divs = Object.assign({}, ETF_DIST_OVERRIDE[o.code]);
   }
   if (dupd) {
-    // 사이클별 동적키(curKey) 매핑: 월중 ETF→26-6, 월말 ETF→26-5
+    // 사이클별 동적키(curKey) 매핑 — 매 사이클 curKey/prevKey/prevPriorKeys/prevFallbackKey/baselineKey 5개 동시 갱신
     if (isUpdatedThisCycle) {
       o.divs = Object.assign({}, o.divs || {}, {[curKey]: dupd[0]});
     }
@@ -2604,8 +2618,11 @@ function detailHtml(e) {
   const months = ["25-12","26-1","26-2","26-3","26-4","26-5","26-6","26-7","26-8","26-9","26-10","26-11","26-12"];
   const monthLabels = ["'25.12","'26.1","'26.2","'26.3","'26.4","'26.5","'26.6","'26.7","'26.8","'26.9","'26.10","'26.11","'26.12"];
   const latestKey = Object.keys(e.divs||{}).filter(k=>e.divs[k]!=null).pop();
-  // 현재 baseline 월 키 — 월중은 6/11 공시 완료(26-6), 월말은 5/27 최신(26-5)
-  const baselineKey = e.dt === "월중" ? "26-7" : "26-7";
+  // 현재 baseline 월 키 (자동 파생)
+  //  - 월말 사이클: 월중 ETF(그 달 13일 분배 완료)·월말 ETF 모두 당월
+  //  - 월중 사이클: 월중 ETF는 당월, 월말 ETF는 아직 미분배라 직전월
+  const baselineKey = (CYCLE_TYPE === "월말" || e.dt === "월중")
+    ? CYCLE_KEY : monthKeyShift(CYCLE_KEY, 1);
   // 첫 분배 월 인덱스 (이 이후의 명시적 null = 미지급으로 표기)
   const firstFilledIdx = (() => {
     for (let i = 0; i < months.length; i++) {

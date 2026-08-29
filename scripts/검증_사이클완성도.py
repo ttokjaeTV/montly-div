@@ -13,9 +13,14 @@ def rp(*a): return os.path.join(ROOT, *a)
 h = open(rp("index.html"), encoding="utf-8").read()
 
 # ── 이번 사이클 마커 (index.html = 기준) ──
-curKey = (re.search(r'const curKey\s*=\s*"([^"]+)"', h) or [None, "?"])[1]
+# 2026-08-28: curKey 리터럴 → CYCLE_KEY/CYCLE_TYPE 전역 상수로 전환됨 (구버전도 폴백 지원)
+curKey = (re.search(r'const CYCLE_KEY\s*=\s*"([^"]+)"', h)
+          or re.search(r'const curKey\s*=\s*"([^"]+)"', h) or [None, "?"])[1]
+cycleType = (re.search(r'const CYCLE_TYPE\s*=\s*"([^"]+)"', h) or [None, None])[1]
 hdr = (re.search(r'//\s*PRICE_UPDATES[^\n]*', h) or [""])[0]
-cyc = "월중" if "월중" in hdr else ("월말" if "월말" in hdr else "?")
+cyc = cycleType or ("월중" if "월중" in hdr else ("월말" if "월말" in hdr else "?"))
+if cycleType and cycleType not in hdr:
+    print("  ⚠ CYCLE_TYPE(%s)과 PRICE_UPDATES 헤더 사이클이 다릅니다 — 확인 필요" % cycleType)
 hdrdate = re.search(r'(\d{4})/(\d{1,2})/(\d{1,2})\s*갱신', hdr)
 macros = re.findall(r'"(\d{4}-\d{2}-\d{2})":\s*\[', h)
 macro_latest = max(macros) if macros else None
