@@ -301,6 +301,21 @@ header.top .badge {
 .unpaid-card .unpaid-head {
   display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
 }
+/* 공지 종류 배지 (미지급·지급일정 변경·상장폐지·안내) */
+.unpaid-card .notice-kind {
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.unpaid-card .unpaid-nolink {
+  margin-top: 6px;
+  color: #8a7a66;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+.unpaid-card .unpaid-nolink span { color: #b0a08c; font-size: 12.5px; }
 .unpaid-card .unpaid-name { font-weight: 700; color: #3a2a1a; font-size: 15.5px; }
 .unpaid-card .unpaid-code { color: var(--ink2); font-size: 13px; font-family: monospace; }
 .unpaid-card .unpaid-mgr {
@@ -842,7 +857,7 @@ footer {
 
   <div class="unpaid-toggle-wrap">
     <button id="unpaidToggle" class="macro-toggle" type="button" aria-expanded="false" onclick="toggleUnpaidSection()">
-      <span class="unpaid-toggle-label">⚠️ 이번달 분배금 미지급 ETF 정리 보기</span>
+      <span class="unpaid-toggle-label">📢 이번달 ETF 공지</span>
       <span class="macro-toggle-caret">▼</span>
     </button>
     <div id="unpaidSection" class="new-listings-section" style="display:none;"></div>
@@ -2083,12 +2098,26 @@ const ETFS = RAW.map(r => {
   return o;
 });
 
-// ==== 분배금 미지급 ETF 공지 (운용사 공지 링크 + 1줄 요약) ====
-// 키: "YY-M" (예: "26-5"), 값: { 코드: { url, title, date, summary, mgr } }
+// ==== ETF 공지 (운용사 공지 링크 + 1줄 요약) ====
+// 키: "YY-M" (예: "26-5"), 값: { 코드: { kind, url, title, date, summary, mgr, nm } }
 // 매월 갱신 시 새 월 키 추가. 운용사(mgr) = KODEX, TIGER, RISE, ACE 등.
-const UNPAID_NOTICES = {
+//
+// ★ kind — 공지 종류 (2026-09-14 추가). 생략하면 "unpaid"로 간주(기존 항목 하위호환).
+//   "unpaid"   분배금 미지급
+//   "schedule" 분배 지급일자·주기 변경 (월중↔월말 전환 등)
+//   "delist"   상장폐지·합병
+//   "etc"      그 밖의 안내
+// 공지가 1건이라도 있으면 섹션이 접힌 상태가 아니라 펼쳐진 상태로 렌더된다.
+const NOTICE_KINDS = {
+  unpaid:   { label: "분배금 미지급",   color: "#c0392b", bg: "#fdeceb" },
+  schedule: { label: "지급일정 변경",   color: "#1f5fa8", bg: "#e9f1fa" },
+  delist:   { label: "상장폐지",       color: "#6b3fa0", bg: "#f2ecfa" },
+  etc:      { label: "안내",           color: "#6b5d4e", bg: "#f2efea" }
+};
+const ETF_NOTICES = {
   "26-5": {
     "495050": {
+      kind: "unpaid",
       mgr: "RISE",
       title: "RISE 코리아밸류업 ETF 분배금 관련 공지사항",
       url: "https://www.riseetf.co.kr/cust/notice/168",
@@ -2098,6 +2127,7 @@ const UNPAID_NOTICES = {
   },
   "26-8": {
     "0036D0": {
+      kind: "delist",
       mgr: "TIME",
       nm: "TIME 미국배당다우존스액티브",
       title: "TIME 미국배당다우존스액티브 ETF(0036D0) 상장폐지 관련 안내",
@@ -2105,8 +2135,22 @@ const UNPAID_NOTICES = {
       date: "2026-08-14",
       summary: "상장폐지 절차 진행으로 8월 월중 분배금 미지급. 비교지수 상관계수가 2026-05-14부터 기준(0.7) 미달 지속(8/10 기준 0.68), 유가증권시장 상장규정 §116①1에 따라 8/14까지 미해소 시 상장폐지 사유 발생. 매매거래 정지 8/18, 2026-08-19 상장폐지 완료(해지상환금 8/21 지급). 트래커 종목 목록에서 제외."
     }
+  },
+  "26-9": {
+    "482730": {
+      kind: "schedule",
+      mgr: "TIGER",
+      nm: "TIGER 미국S&P500타겟데일리커버드콜",
+      title: "TIGER 미국S&P500타겟데일리커버드콜 ETF 월중 분배 전환 안내",
+      // URL 미확인 — 미래에셋 공지 detailsKey=757 이나 2026-09-14 기준 주소 변경으로 404.
+      // 확인되면 채워 넣을 것 (추측 주소를 넣지 않는다).
+      date: "2026-09-02",
+      summary: "분배기준일이 매월 마지막 영업일에서 매월 15일로 변경. 시행 9/1, 9월 분배분부터 적용. 마지막 월말 배당락 8/28(100원) → 첫 월중 배당락 9/14(114원). 트래커에서 월말 → 월중으로 이동."
+    }
   }
 };
+// 하위호환 별칭 (기존 코드·스크립트가 UNPAID_NOTICES를 참조할 수 있음)
+const UNPAID_NOTICES = ETF_NOTICES;
 
 // 분배금 미지급 ETF 섹션 렌더
 function renderUnpaidSection() {
@@ -2122,32 +2166,73 @@ function renderUnpaidSection() {
   const codeMap = {};
   ETFS.forEach(e => { codeMap[e.code] = e; });
 
-  const data = UNPAID_NOTICES[monthKey] || {};
+  const data = ETF_NOTICES[monthKey] || {};
   const codes = Object.keys(data);
+  const kindOf = code => (data[code].kind && NOTICE_KINDS[data[code].kind]) ? data[code].kind : "unpaid";
+
   let inner;
   if (codes.length === 0) {
-    inner = `<div class="empty-msg">이번달 미지급 공지된 ETF 없음</div>`;
+    inner = `<div class="empty-msg">이번달 공지된 ETF 없음</div>`;
   } else {
-    inner = codes.map(code => {
+    // 종류 순서 고정: 상장폐지 → 미지급 → 지급일정 변경 → 안내
+    const order = ["delist", "unpaid", "schedule", "etc"];
+    const sorted = codes.slice().sort((a, b) => order.indexOf(kindOf(a)) - order.indexOf(kindOf(b)));
+    inner = sorted.map(code => {
       const e = codeMap[code];
       const n = data[code];
       const nm = e ? e.nm : (n.nm || code);
+      const k = NOTICE_KINDS[kindOf(code)];
       return `<div class="unpaid-row">
         <div class="unpaid-head">
+          <span class="notice-kind" style="color:${k.color};background:${k.bg};">${k.label}</span>
           <span class="unpaid-name">${nm}</span><span class="unpaid-code">${code}</span>
           ${n.mgr ? `<span class="unpaid-mgr">${n.mgr}</span>` : ''}
           <span class="unpaid-date">${n.date || ''}</span>
         </div>
         <div class="unpaid-summary">${n.summary || ''}</div>
-        ${n.url ? `<a class="unpaid-link" href="${n.url}" target="_blank" rel="noopener">📎 운용사 공지 보기 — ${n.title || '바로가기'}</a>` : ''}
+        ${n.url
+          ? `<a class="unpaid-link" href="${n.url}" target="_blank" rel="noopener">📎 운용사 공지 보기 — ${n.title || '바로가기'}</a>`
+          : (n.title ? `<div class="unpaid-nolink">📄 ${n.title} <span>(공지 링크 미확인)</span></div>` : '')}
       </div>`;
     }).join("");
   }
 
+  // 종류별 건수 요약 (토글 라벨·카드 제목 공용)
+  const counts = {};
+  codes.forEach(c => { const k = kindOf(c); counts[k] = (counts[k] || 0) + 1; });
+  const summaryTxt = Object.keys(NOTICE_KINDS)
+    .filter(k => counts[k])
+    .map(k => NOTICE_KINDS[k].label + " " + counts[k])
+    .join(" · ");
+
   host.innerHTML = `<div class="unpaid-card">
-    <h4>⚠️ <span>${monthLabel} 분배금 미지급 ETF</span> <span style="color:var(--ink2); font-weight:500; font-size:13px;">(${codes.length}종)</span></h4>
+    <h4>📢 <span>${monthLabel} ETF 공지</span> <span style="color:var(--ink2); font-weight:500; font-size:13px;">(${codes.length}건${summaryTxt ? " — " + summaryTxt : ""})</span></h4>
     ${inner}
   </div>`;
+
+  // ★ 공지가 1건이라도 있으면 펼친 상태로 시작한다 (접어두면 놓친다)
+  const btn = document.getElementById("unpaidToggle");
+  const lbl = btn ? btn.querySelector(".unpaid-toggle-label") : null;
+  if (btn && lbl) {
+    if (codes.length > 0) {
+      btn.setAttribute("aria-expanded", "true");
+      host.style.display = "";
+      lbl.textContent = "📢 이번달 ETF 공지 " + codes.length + "건 — " + summaryTxt + " (접기)";
+    } else {
+      btn.setAttribute("aria-expanded", "false");
+      host.style.display = "none";
+      lbl.textContent = "📢 이번달 ETF 공지 없음 — 보기";
+    }
+  }
+}
+
+// 토글 라벨 텍스트 (열림/닫힘 상태별) — renderUnpaidSection이 만든 요약을 재사용
+function unpaidToggleLabel(open) {
+  const host = document.getElementById("unpaidSection");
+  const h4 = host ? host.querySelector("h4 span:nth-of-type(2)") : null;
+  const meta = h4 ? h4.textContent.replace(/^\(|\)$/g, "") : "";
+  if (!meta || meta.indexOf("0건") === 0) return "📢 이번달 ETF 공지 없음 — 보기";
+  return "📢 이번달 ETF 공지 " + meta + (open ? " (접기)" : " 보기");
 }
 
 // 신규상장 섹션 렌더 (지난달·이번달)
@@ -3221,11 +3306,11 @@ function toggleUnpaidSection() {
   if (open) {
     btn.setAttribute("aria-expanded", "false");
     sec.style.display = "none";
-    lbl.textContent = "⚠️ 이번달 분배금 미지급 ETF 정리 보기";
+    lbl.textContent = unpaidToggleLabel(false);
   } else {
     btn.setAttribute("aria-expanded", "true");
     sec.style.display = "";
-    lbl.textContent = "⚠️ 이번달 분배금 미지급 ETF 정리 (접기)";
+    lbl.textContent = unpaidToggleLabel(true);
   }
 }
 </script>
