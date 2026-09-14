@@ -1,18 +1,18 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-08-28",
+"generated": "2026-09-14",
 "amcLinksUpdated": "2026-08-27",
 "krxDataDate": "2026-08-27",
-"total": 190,
+"total": 191,
 "deepLink": 186,
-"deepLinkRate": 97.9,
+"deepLinkRate": 97.4,
 "breakdown": {
 "deep_json": 137,
 "deep_isin": 34,
 "deep_ticker": 15,
 "home": 0,
-"naver": 4
+"naver": 5
 },
 "note": "단축코드 -> [공식 페이지 URL, 버튼 라벨]. 사전 해석 완료 — 트래커는 code만 있으면 됨"
 },
@@ -764,6 +764,10 @@
 "0233J0": [
 "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70233J0002",
 "TIGER 공식 상세"
+],
+"0238P0": [
+"https://finance.naver.com/item/main.naver?code=0238P0",
+"종목 정보 (네이버)"
 ],
 "476850": [
 "https://www.samsungactive.co.kr/etf/view.do?id=2ETFM2",
