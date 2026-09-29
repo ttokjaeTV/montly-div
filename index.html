@@ -791,7 +791,7 @@ footer {
         </svg>
         <span class="link-label">평생 ETF 투자 카페</span>
       </a>
-      <button id="xlsxBtn" type="button" title="168개 전체 데이터를 엑셀(XLSX) 파일로 저장 — 자동필터 켜져있음" style="background:#1d6f42; color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);">📊 엑셀 저장</button>
+      <button id="xlsxBtn" type="button" title="전체 ETF 데이터를 엑셀(XLSX) 파일로 저장 — 자동필터 켜져있음" style="background:#1d6f42; color:#fff; border:0; border-radius:10px; padding:8px 14px; font-weight:700; font-size:14px; cursor:pointer; box-shadow:var(--shadow);">📊 엑셀 저장</button>
       <div class="cnt"><b id="cntFiltered">0</b> / <span id="cntTotal">0</span> 종목 표시</div>
     </div>
   </header>
@@ -2435,17 +2435,67 @@ function exportXLSX() {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "월배당ETF");
   // 저장
-  const filename = makeXLSXFilename();
-  XLSX.writeFile(wb, filename);
+  return saveXLSX(wb, makeXLSXFilename());
 }
+
+// ---- 모바일 저장 처리 ----
+// 카톡·네이버·인스타 등 앱 안의 브라우저(웹뷰)는 blob 다운로드를 막아서 버튼을 눌러도 파일이 안 생긴다.
+// → 인앱이면 외부 브라우저로 넘기고, iOS는 공유 시트(파일에 저장)를 우선 쓴다.
+const _UA = navigator.userAgent || "";
+const IS_IOS = /iPhone|iPad|iPod/i.test(_UA) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const IS_ANDROID = /Android/i.test(_UA);
+const IS_KAKAO = /KAKAOTALK/i.test(_UA);
+const IS_INAPP = IS_KAKAO || /NAVER\(inapp|NAVER\/|Instagram|FBAN|FBAV|FB_IAB|Line\/|DaumApps|everytimeApp|BAND\/|Whale\/[\d.]+ .*inapp|; wv\)/i.test(_UA);
+
+function openInExternalBrowser() {
+  const url = location.href;
+  if (IS_KAKAO) {
+    location.href = "kakaotalk://web/openExternal?url=" + encodeURIComponent(url);
+    return true;
+  }
+  if (IS_ANDROID) {
+    location.href = "intent://" + url.replace(/^https?:\/\//, "") +
+      "#Intent;scheme=https;package=com.android.chrome;S.browser_fallback_url=" + encodeURIComponent(url) + ";end";
+    return true;
+  }
+  return false; // iOS 네이버·인스타 등은 강제 전환 불가 → 안내만
+}
+
+function saveXLSX(wb, filename) {
+  if (IS_INAPP) {
+    const msg = IS_IOS && !IS_KAKAO
+      ? "앱 안의 브라우저에서는 파일 저장이 막혀 있어요.\n\n오른쪽 위(또는 아래) ··· 메뉴 → 'Safari로 열기' / '다른 브라우저로 열기'를 누른 뒤 다시 엑셀 저장을 눌러주세요."
+      : "앱 안의 브라우저에서는 파일 저장이 막혀 있어요.\n\n[확인]을 누르면 기본 브라우저로 이 페이지를 엽니다. 거기서 다시 엑셀 저장을 눌러주세요.";
+    if (IS_IOS && !IS_KAKAO) { alert(msg); return "inapp"; }
+    if (confirm(msg)) openInExternalBrowser();
+    return "inapp";
+  }
+  // iOS: 공유 시트 → '파일에 저장' (Safari·크롬 모두 동작, blob 다운로드보다 안정적)
+  if (IS_IOS && navigator.share && navigator.canShare) {
+    try {
+      const buf = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+      const file = new File([buf], filename, { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+      if (navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: filename }).catch(err => {
+          if (err && err.name === "AbortError") return; // 사용자가 공유 시트를 닫음
+          try { XLSX.writeFile(wb, filename); } catch (e2) { alert("엑셀 저장 중 오류: " + e2.message); }
+        });
+        return "share";
+      }
+    } catch (e) { console.warn("share fallback", e); }
+  }
+  XLSX.writeFile(wb, filename);
+  return "download";
+}
+
 if (xlsxBtn) {
   xlsxBtn.onclick = () => {
     const orig = xlsxBtn.textContent;
     xlsxBtn.textContent = "📊 저장 중...";
     xlsxBtn.disabled = true;
     try {
-      exportXLSX();
-      xlsxBtn.textContent = "✅ 완료";
+      const r = exportXLSX();
+      xlsxBtn.textContent = (r === "inapp") ? orig : "✅ 완료";
     } catch (e) {
       console.error(e);
       alert("엑셀 저장 중 오류: " + e.message);
