@@ -870,9 +870,9 @@ footer {
           <tr>
             <th class="sortable" data-k="nm">종목 (코드)</th>
             <th class="sortable" data-k="dt">기준일</th>
-            <th class="sortable num" data-k="pr3">공시일<br>종가</th>
+            <th class="sortable num" data-k="discClose">공시일<br>종가</th>
             <th class="sortable num" data-k="mcCurr">시총</th>
-            <th class="num" data-grp="mc">시총 증감<br><span style="font-size:10px;"><span class="sublbl" data-k="mcDiff">증감액</span>/<span class="sublbl" data-k="mcDiffPct">증감률</span></span></th>
+            <th class="num" data-grp="mc" title="전월 시총은 현재 시총 × (전월 공시일 종가 ÷ 현재 종가)로 추정한 값입니다. 설정·환매(좌수 변동)는 반영되지 않아 실제 증감과 다를 수 있습니다.">시총 증감<sup style="font-size:9px;">※</sup><br><span style="font-size:10px;"><span class="sublbl" data-k="mcDiff">증감액</span>/<span class="sublbl" data-k="mcDiffPct">증감률</span></span></th>
             <th class="num" data-grp="div">분배금<br><span style="font-size:10px;"><span class="sublbl" data-k="divCurr">당월</span>/<span class="sublbl" data-k="divDiff">전월대비</span></span></th>
             <th class="num" data-grp="dr">분배율<br><span style="font-size:11px;"><span class="sublbl" data-k="dr">당월</span>/<span class="sublbl" data-k="ax12">1년</span></span></th>
             <th class="num" data-grp="retM">이번달 수익률<br><span style="font-size:11px;"><span class="sublbl" data-k="retM">주가</span>/<span class="sublbl" data-k="retTR">TR</span></span></th>
@@ -886,7 +886,8 @@ footer {
   </div>
 
   <footer>
-    💛 똑재TV · 자료 = 운용사 분배공시 + KRX 종가 기준. 본 자료는 정보 제공이며 투자 권유가 아닙니다.
+    💛 똑재TV · 자료 = 운용사 분배공시 + KRX 종가 기준. 본 자료는 정보 제공이며 투자 권유가 아닙니다.<br>
+    <span style="font-size:11px;">※ 시총 증감: 전월 시총을 현재 시총 × 종가 변화율로 추정한 값입니다(설정·환매에 따른 좌수 변동 미반영).</span>
   </footer>
 </div>
 
@@ -909,8 +910,11 @@ const KR_HOLIDAYS = new Set([
   "2026-01-01",  // 신정
   "2026-02-16","2026-02-17","2026-02-18",  // 설날 연휴
   "2026-03-02",  // 삼일절(일) 대체공휴일
+  "2026-05-01",  // 근로자의날 (KRX 휴장 — 차트 시세 5/1 거래 없음 확인)
   "2026-05-05",  // 어린이날
   "2026-05-25",  // 부처님오신날(일) 대체공휴일
+  "2026-06-03",  // 제9회 전국동시지방선거 (KRX 휴장)
+  "2026-07-17",  // 제헌절 (2026년 공휴일 재지정 · KRX 휴장 — 차트 시세 7/17 거래 없음 확인)
   "2026-08-17",  // 광복절(토) 대체공휴일
   "2026-09-24","2026-09-25","2026-09-26",  // 추석 연휴
   "2026-10-05",  // 개천절(토) 대체공휴일
@@ -1939,16 +1943,60 @@ function monthKeyShift(key, n) {
   while (m < 1) { m += 12; y -= 1; }
   return y + "-" + m;
 }
+// ★ 2026-10-04: 수익률 구간과 분배락일 정렬용 (사이클 로직에서 자동 파생 — 매월 수정 불필요)
+//   월키 "YY-M" + 배당기준(월중/월말) → 그 분배의 공시일(= 배당락 전 마지막 매수일, 종가가 분배 포함가)
+function discDateOfKey(key, dt) {
+  const [yy, mm] = key.split("-").map(Number);
+  return getDisclosureDate(2000 + yy, mm, dt === "월중" ? 15 : 31);
+}
+function ymdNum(d) { return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate(); }
+// 이번달 수익률 구간: pr2(직전 같은 사이클 공시일 종가) → pr3(이번 사이클 공시일 종가)
+//   월말 사이클 26-9 → 8/27 ~ 9/28, 월중 사이클 26-9 → 8/12 ~ 9/11
+const WIN_END_YMD   = ymdNum(discDateOfKey(CYCLE_KEY, CYCLE_TYPE));
+const WIN_START_YMD = ymdNum(discDateOfKey(monthKeyShift(CYCLE_KEY, 1), CYCLE_TYPE));
+const PREV_WIN_START_YMD = ymdNum(discDateOfKey(monthKeyShift(CYCLE_KEY, 2), CYCLE_TYPE));
+// 구간 (startYmd, endYmd] 안에 배당락일이 들어가는 분배금 합계.
+//   분배 공시일 d의 배당락일은 d 다음 영업일 → startYmd <= d < endYmd 이면 구간 안.
+//   (월말 사이클이면 월말 ETF의 당월 분배는 9/29 배당락 → 구간 밖, 전월(26-8) 분배가 구간 안)
+function divsInWindow(o, startYmd, endYmd, keyFilter) {
+  let s = 0;
+  Object.keys(o.divs || {}).forEach(k => {
+    const v = o.divs[k];
+    if (v == null || isNaN(v)) return;
+    if (keyFilter && !keyFilter(k)) return;
+    const d = ymdNum(discDateOfKey(k, o.dt));
+    if (d >= startYmd && d < endYmd) s += v;
+  });
+  return s;
+}
+function listingYmd(o) {
+  const nl = NEW_LISTINGS[o.code];
+  if (!nl || !nl.lst) return null;
+  const [m, d] = nl.lst.split("/").map(Number);
+  return (2000 + Number(CYCLE_KEY.split("-")[0])) * 10000 + m * 100 + d;
+}
 
 const ETFS = RAW.map(r => {
   const o = {};
   HEADERS.forEach((h, i) => o[h] = r[i]);
+  // RAW의 초기 입력값 중 이후 갱신되지 않는 필드는 화면에 낡은 값이 남지 않도록 비우고 아래에서 재계산
+  o.retPrev = null;   // 전월 총수익률 — 차트 시세(비동기)로 재계산
+  o.aOther = null;    // 연간(예상) 평균기반 — 평균 분배금 × 12 ÷ 현재 종가로 재계산
   // 4월 종가 일괄 업데이트 + 신규 상장 표기
   const upd = PRICE_UPDATES[o.code];
   if (upd) {
     o.pr1 = upd[0];
     o.pr2 = upd[1];
     o.pr3 = upd[2];
+    // ★ 2026-10-04: 올해 상장 종목은 PRICE_UPDATES pr1이 null로 들어온다.
+    //   RAW에 상장일 원본 종가(r[15])가 있으면 그것을 pr1로 쓴다 (수정주가 아님 → 분배금 이중계산 없음).
+    //   RAW에도 없으면 아래 비동기 블록에서 차트 시세를 원본으로 복원해 채운다.
+    o.pr1IsListing = false;
+    if (o.pr1 == null && NEW_LISTINGS[o.code]) {
+      if (r[15] != null) { o.pr1 = r[15]; o.pr1IsListing = true; }
+      else { o.ytd = null; o.ytdTR = null; }   // RAW의 낡은 값 제거 → 비동기 fallback이 채움
+    }
+    if (o.pr2 == null && NEW_LISTINGS[o.code]) { o.retM = null; o.retTR = null; }
     // 가격 기반 수익률 재계산
     if (o.pr2 != null && o.pr3 != null) {
       o.retM = +((o.pr3 - o.pr2) / o.pr2 * 100).toFixed(2);
@@ -2048,16 +2096,25 @@ const ETFS = RAW.map(r => {
     const divVals = Object.values(o.divs).filter(v => v != null && !isNaN(v));
     o.avg = divVals.length ? Math.round(divVals.reduce((a,b)=>a+b,0) / divVals.length) : null;
   }
-  // TR 수익률 재계산 (분배금 반영)
-  if (o.pr2 != null && o.pr3 != null) {
-    const aprDiv = (dupd && dupd[0] != null) ? dupd[0] : 0;
-    o.retTR = +(o.retM + (aprDiv / o.pr2 * 100)).toFixed(2);
+  // 평균 분배금: DIVIDEND_UPDATES가 없는 종목도 현재 divs(최근 12개월)로 재계산 (RAW 초기값 고착 방지)
+  if (!dupd && o.divs) {
+    const dv = Object.values(o.divs).filter(v => v != null && !isNaN(v));
+    if (dv.length) o.avg = Math.round(dv.reduce((a,b)=>a+b,0) / dv.length);
   }
-  if (o.pr1 != null && o.pr3 != null && o.divs) {
-    let divSum = 0;
-    Object.keys(o.divs).forEach(k => {
-      if (k.startsWith(CYCLE_YEAR_PREFIX) && o.divs[k] != null) divSum += o.divs[k];
-    });
+  // 연간(예상) 평균기반 = 평균 분배금 × 12 ÷ 현재 종가(pr3, 최신 공시일 종가)
+  if (o.avg != null && o.pr3) o.aOther = +(o.avg * 12 / o.pr3 * 100).toFixed(2);
+  // TR 수익률 재계산 (분배금 반영)
+  // ★ 2026-10-04: 가격 구간(pr2 공시일 → pr3 공시일) 안에 배당락일이 들어간 분배금만 더한다.
+  //   월말 사이클: 월중 ETF = 당월(9/14 락), 월말 ETF = 전월(8/28 락) — 당월 분배는 9/29 락이라 구간 밖.
+  //   (이전: 모든 ETF에 당월 분배금을 더해 월말 ETF는 아직 반영 안 된 분배를 미리 더함)
+  if (o.pr2 != null && o.pr3 != null) {
+    const winDiv = divsInWindow(o, WIN_START_YMD, WIN_END_YMD);
+    o.retTR = +(o.retM + (winDiv / o.pr2 * 100)).toFixed(2);
+  }
+  if (o.pr1 != null && o.pr3 != null) {
+    o.ytd = +((o.pr3 - o.pr1) / o.pr1 * 100).toFixed(2);
+    // 올해 분배금 중 배당락일이 구간 끝(pr3 공시일) 이전인 것만 합산 (월말 ETF의 당월 분배 제외)
+    const divSum = divsInWindow(o, 0, WIN_END_YMD, k => k.startsWith(CYCLE_YEAR_PREFIX));
     o.ytdTR = +(o.ytd + (divSum / o.pr1 * 100)).toFixed(2);
   }
   // 신규 상장 표기
@@ -2389,7 +2446,7 @@ function exportXLSX() {
     "전월시총(억)","당월시총(억)","시총증감액(억)","시총증감률(%)",
     ...monthHeaders,
     "평균분배금","당월분배금","전월대비","당월분배율(%)","1년분배율(%)",
-    "1/2종가","전월baseline종가","당월baseline종가",
+    "1/2종가(올해상장=상장일)","전월baseline종가","당월baseline종가",
     "이번달주가수익률(%)","이번달TR(%)","올해주가상승률(%)","올해TR(%)","2025년도TR(%)",
     "비고","특이사항","신규상장일"
   ];
@@ -2660,7 +2717,7 @@ function renderSummary(list) {
     <div class="kpi"><div class="lbl">표시 종목</div><div class="val">${s.cnt}</div><div class="sub">월중 ${s.mid} · 월말 ${s.end}</div></div>
     <div class="kpi"><div class="lbl">합산 시총</div><div class="val">${fmtMC(s.sumMc)}</div><div class="sub">필터 적용 합계</div></div>
     <div class="kpi"><div class="lbl">평균 당월 분배율</div><div class="val">${s.avgRate.toFixed(2)}%</div><div class="sub">분배율 평균</div></div>
-    <div class="kpi"><div class="lbl">평균 연간(X12) 예상</div><div class="val">${s.avgAnn.toFixed(2)}%</div><div class="sub">최신분배율 × 12</div></div>
+    <div class="kpi"><div class="lbl">평균 1년 분배율</div><div class="val">${s.avgAnn.toFixed(2)}%</div><div class="sub">최근 12개월 분배금 기준</div></div>
   `;
 }
 
@@ -2890,12 +2947,13 @@ function detailHtml(e) {
         <div class="pair"><span class="k">당월 시총</span><span class="v">${fmtMC(e.mc2)}</span></div>
         <div class="pair"><span class="k">증감액</span><span class="v">${fmtMCSign(e.mcDiff)}</span></div>
         <div class="pair"><span class="k">증감률</span><span class="v">${fmtPct(e.mcDiffPct)}</span></div>
+        <div class="note">※ 전월 시총은 현재 시총 × (전월 공시일 종가 ÷ 현재 종가)로 추정 — 설정·환매(좌수 변동) 미반영</div>
       </div>
       <div class="detail-card">
         <h4>💰 분배율 / 연간예상</h4>
         <div class="pair"><span class="k">당월 분배율</span><span class="v">${e.dr!=null?e.dr.toFixed(2)+"%":"—"}</span></div>
         <div class="pair"><span class="k">1년 분배율 (Trailing 12M)</span><span class="v">${e.ax12!=null?e.ax12.toFixed(2)+"%":"—"}${e.ax12!=null && e.ax12Estimated ? ' <span style="font-size:11px; color:var(--ink2); font-weight:500;">(1년 미만, 추정)</span>' : ''}</span></div>
-        <div class="pair"><span class="k">연간(예상) 평균기반</span><span class="v">${e.aOther!=null?e.aOther.toFixed(2)+"%":"—"}</span></div>
+        <div class="pair"><span class="k">연간(예상) 평균기반<br><span style="font-size:10px; color:var(--ink2); font-weight:500;">평균 분배금 × 12 ÷ 최신 종가</span></span><span class="v">${e.aOther!=null?e.aOther.toFixed(2)+"%":"—"}</span></div>
         <div class="pair"><span class="k">평균 분배금</span><span class="v">${fmtNum(e.avg,"원")}</span></div>
         <div class="pair"><span class="k">분배금 누적</span><span class="v">${fmtNum(sum,"원")} (${divCount}개월)</span></div>
       </div>
@@ -2903,7 +2961,7 @@ function detailHtml(e) {
         <h4>📈 수익률 ${e.lst ? `<span style="color:var(--orange); font-size:11px; font-weight:700;">· 2026년 ${e.lst} 신규상장</span>` : ""}</h4>
         <div class="pair"><span class="k">당월(분배일) 주가수익률</span><span class="v">${fmtPct(e.retM)}${e.retMLst ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일 이후]</span>' : ''}</span></div>
         <div class="pair"><span class="k">당월 TR (분배 포함)</span><span class="v">${fmtPct(e.retTR)}</span></div>
-        <div class="pair"><span class="k">전월 총수익률</span><span class="v">${fmtPct(e.retPrev)}</span></div>
+        <div class="pair"><span class="k">전월 TR (분배 포함)</span><span class="v">${fmtPct(e.retPrev)}</span></div>
         <div class="pair"><span class="k">올해 주가상승률</span><span class="v">${fmtPct(e.ytd)}${e.ytdLst ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일 이후]</span>' : ''}</span></div>
         <div class="pair"><span class="k">올해 TR</span><span class="v">${fmtPct(e.ytdTR)}</span></div>
         <div class="pair"><span class="k">2025년도 TR</span><span class="v">${fmtPct(e.y2025)}${e.y2025Lst === true ? ' <span style="color:var(--orange); font-size:10px; font-weight:700;">[상장일('+e.y2025LstDate+') 이후]</span>' : ''}${e.y2025Lst === "before" ? ' <span style="color:var(--ink2); font-size:10px;">[2026 상장]</span>' : ''}</span></div>
@@ -3289,9 +3347,50 @@ render();
 renderNewListings();
 renderUnpaidSection();
 
-// 신규상장 종목 ytd fallback (2026/05/28 영구 패치)
-// pr1=null인 신규상장 종목은 chart-prices.json의 첫 거래일 종가를 pr1 대신 사용해 ytd 계산
-// → "올해 수익률"이 "상장일 이후 누적 수익률"로 표시됨
+// 신규상장 종목 ytd fallback (2026/05/28 영구 패치 · 2026-10-04 원본가 복원으로 교체)
+// chart-prices.json(네이버 siseJson)은 배당락을 소급 반영한 '수정주가'라서
+// 첫 거래일 수정종가를 그대로 쓰면 주가수익률에 분배 효과가 섞이고, TR에서 분배금을 또 더해 이중계산된다.
+// → 분배금·공시일(사이클 로직)로 수정계수를 거꾸로 풀어 '원본 종가'를 복원해 사용 (restore_prices.py와 같은 원리).
+//   수정(t) = 원본(t) × Π{ 1 - v_i / 원본(공시일_i) : 공시일_i >= t }
+//   검증(2026-10-04): 2026년 상장 26종 상장일 원본 종가 대비 오차 최대 0.26%, 평균 0.05%
+function makeRawResolver(o, rows, anchorYmd, anchorRaw) {
+  // anchorYmd/anchorRaw: 원본 종가를 아는 날짜(예: pr3 공시일 종가)에 맞춰 축척 → 그 이후 배당락의 조정 오차를 제거
+  const adj = new Map(rows.map(r => [Number(r[0]), r[1]]));
+  const dates = rows.map(r => Number(r[0]));
+  const lastYmd = dates[dates.length - 1];
+  const adjOnOrBefore = ymd => {
+    let lo = 0, hi = dates.length - 1, ans = -1;
+    while (lo <= hi) { const mid = (lo + hi) >> 1; if (dates[mid] <= ymd) { ans = mid; lo = mid + 1; } else hi = mid - 1; }
+    return ans < 0 ? null : adj.get(dates[ans]);
+  };
+  // 배당락이 차트 마지막 날짜 이전에 지나간 분배만 (공시일 < 마지막 날짜 → 락일 <= 마지막 날짜)
+  const evs = Object.keys(o.divs || {})
+    .filter(k => o.divs[k] != null && o.divs[k] > 0)
+    .map(k => ({ d: ymdNum(discDateOfKey(k, o.dt)), v: o.divs[k] }))
+    .filter(e => e.d >= dates[0] && e.d < lastYmd && (anchorYmd == null || e.d < anchorYmd))
+    .sort((a, b) => b.d - a.d);
+  let scale = 1;
+  if (anchorYmd != null && anchorRaw) {
+    const aA = adjOnOrBefore(anchorYmd);
+    if (aA) scale = anchorRaw / aA;
+  }
+  let F = 1;
+  const steps = [];   // [공시일, 그 날짜 이하에 적용되는 누적계수]
+  for (const e of evs) {
+    const a = adjOnOrBefore(e.d);
+    if (a == null) continue;
+    const raw = a * scale / F + e.v;
+    F *= (1 - e.v / raw);
+    steps.push([e.d, F]);
+  }
+  return ymd => {
+    const a = adjOnOrBefore(ymd);
+    if (a == null) return null;
+    let f = 1;
+    for (const [d, Fd] of steps) { if (d >= ymd) f = Fd; else break; }
+    return Math.round(a * scale / f);
+  };
+}
 (async () => {
   try {
     if (!_allPricesData) {
@@ -3306,35 +3405,43 @@ renderUnpaidSection();
     if (!_allPricesData || !_allPricesData.data) return;
     let needsRerender = false;
     ETFS.forEach(o => {
-      // 신규상장 fallback (pr3 + chart 데이터 필수)
       if (o.pr3 == null) return;
       const codeData = _allPricesData.data[o.code];
       if (!codeData || !codeData.length) return;
-      const lstPrice = codeData[0][1]; // 첫 거래일 종가
-      if (!lstPrice || lstPrice <= 0) return;
+      // 원본가를 아는 pr3(이번 공시일 종가)에 축척 — 공시일 이후 배당락 조정 오차 제거
+      const rawAt = makeRawResolver(o, codeData, WIN_END_YMD, o.pr3);
+      const firstYmd = Number(codeData[0][0]);
+      const lstYmd = listingYmd(o);
 
-      // ytd fallback (pr1 null = 연초 데이터 없음)
-      if (o.pr1 == null && o.ytd == null) {
-        o.ytd = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
-        if (o.divs) {
-          let divSum = 0;
-          Object.keys(o.divs).forEach(k => {
-            if (k.startsWith(CYCLE_YEAR_PREFIX) && o.divs[k] != null) divSum += o.divs[k];
-          });
-          o.ytdTR = +(o.ytd + (divSum / lstPrice * 100)).toFixed(2);
+      // 1) 올해 상장 + 상장일 원본 종가 없음 → 차트 첫 거래일 종가를 원본으로 복원해 pr1로 사용
+      if (o.pr1 == null && lstYmd != null) {
+        const lstRaw = rawAt(firstYmd);
+        if (lstRaw && lstRaw > 0) {
+          o.pr1 = lstRaw; o.pr1IsListing = true; o.pr1Est = true;
+          o.ytd = +((o.pr3 - lstRaw) / lstRaw * 100).toFixed(2);
+          const divSum = divsInWindow(o, 0, WIN_END_YMD, k => k.startsWith(CYCLE_YEAR_PREFIX));
+          o.ytdTR = +(o.ytd + (divSum / lstRaw * 100)).toFixed(2);
+          needsRerender = true;
         }
+      }
+
+      // 2) retM fallback (pr2 null = 직전 사이클 공시일 이후 상장) — 상장일 원본 종가 → pr3
+      if (o.pr2 == null && o.retM == null && lstYmd != null && o.pr1 != null) {
+        o.retM = +((o.pr3 - o.pr1) / o.pr1 * 100).toFixed(2);
+        const winDiv = divsInWindow(o, firstYmd, WIN_END_YMD);
+        o.retTR = +(o.retM + (winDiv / o.pr1 * 100)).toFixed(2);
         needsRerender = true;
       }
 
-      // retM fallback (pr2 null = 직전 사이클 종가 없음, 즉 상장 직후 첫 사이클)
-      // 상장일 ~ 분배공시일 기간 수익률 = ytd와 동일 기간
-      if (o.pr2 == null && o.retM == null) {
-        o.retM = +((o.pr3 - lstPrice) / lstPrice * 100).toFixed(2);
-        // 사이클 자동 파생: 월말 사이클(또는 월중 ETF)은 당월, 월중 사이클의 월말 ETF는 직전월
-        const fbKey = (CYCLE_TYPE === "월말" || o.dt === "월중") ? CYCLE_KEY : monthKeyShift(CYCLE_KEY, 1);
-        const curDiv = (o.divs && o.divs[fbKey] != null) ? o.divs[fbKey] : 0;
-        o.retTR = +(o.retM + (curDiv / lstPrice * 100)).toFixed(2);
-        needsRerender = true;
+      // 3) 전월 TR — 전전 공시일 원본 종가(복원) → pr2, 그 구간에 배당락된 분배금 포함
+      //    (상장이 전전 공시일 이후면 한 달 구간이 없으므로 표시하지 않음)
+      if (o.pr2 != null && firstYmd <= PREV_WIN_START_YMD) {
+        const p0 = makeRawResolver(o, codeData, WIN_START_YMD, o.pr2)(PREV_WIN_START_YMD);   // pr2(원본)에 축척
+        if (p0 && p0 > 0) {
+          const d = divsInWindow(o, PREV_WIN_START_YMD, WIN_START_YMD);
+          o.retPrev = +((o.pr2 - p0 + d) / p0 * 100).toFixed(2);
+          needsRerender = true;
+        }
       }
     });
     if (needsRerender) render();
