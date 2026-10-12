@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>똑재TV · 국내 상장 월배당 ETF 트래커</title>
+<title>국내 상장 월배당 ETF 트래커 · 똑재TV</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
 :root {
   color-scheme: light;
@@ -15,7 +16,7 @@
   --ink2: #6b5d4e;
   --line: #ead7b9;
   --line2: #f1e4cc;
-  --orange: #e87b1a;       /* 똑재TV 오렌지 */
+  --orange: #D9542B;       /* 똑재TV 오렌지 (계산기 공통 강조색) */
   --orange2: #f59e3d;
   --orange-bg: #fff1dc;
   --green: #0e8a3a;
@@ -38,6 +39,8 @@ body {
   letter-spacing: -0.01em;
 }
 .wrap { max-width: 1480px; margin: 0 auto; padding: 16px 18px 80px; transition: max-width .2s ease; }
+.hub-back { display: inline-block; margin-bottom: 8px; font-size: 13px; font-weight: 600; color: var(--ink2); text-decoration: none; }
+.hub-back:hover { color: var(--orange); }
 header.top {
   display:flex; align-items:flex-end; justify-content:space-between;
   gap:16px; flex-wrap:wrap; margin-bottom:14px;
@@ -771,9 +774,10 @@ footer {
 </head>
 <body>
 <div class="wrap" id="wrap">
+  <a href="https://ttokjaetv.github.io/" class="hub-back">← 똑재TV 계산기 모음</a>
   <header class="top">
     <div>
-      <h1>똑재TV · 국내 상장 월배당 ETF 트래커 <span class="badge" id="periodBadge">2026년 3월 기준</span></h1>
+      <h1>똑재TV · 국내 상장 월배당 ETF 트래커 <span class="badge" id="periodBadge">분배공시일 종가 기준</span></h1>
       <div class="sub">분배기준일에 맞춰 월중·월말 ETF를 분리해서 보여줍니다. 종목명을 누르면 월별 분배금·수익률·시총 변화를 확인할 수 있어요.</div>
     </div>
     <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
@@ -782,7 +786,7 @@ footer {
           <path fill="#fff" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814z"/>
           <path fill="#FF0000" d="M9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
         </svg>
-        <span class="link-label">똑재TV</span>
+        <span class="link-label">똑재TV 구독하기</span>
       </a>
       <a href="https://cafe.naver.com/ttokjae" target="_blank" rel="noopener" class="link-btn naver" title="평생 ETF 투자 카페">
         <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
@@ -886,7 +890,8 @@ footer {
   </div>
 
   <footer>
-    💛 똑재TV · 자료 = 운용사 분배공시 + KRX 종가 기준. 본 자료는 정보 제공이며 투자 권유가 아닙니다.<br>
+    💛 똑재TV · 자료 = 운용사 분배공시 + 네이버 금융 일별 종가 기준. 본 자료는 정보 제공이며 투자 권유가 아닙니다.<br>
+    <span style="font-size:11px;">※ 분배율: 당월 = 당월 분배금 ÷ 분배공시일 종가, 1년 = 최근 12개월 분배금 합 ÷ 분배공시일 종가. TR(총수익률) = 주가 수익률 + 그 기간 받은 분배금 ÷ 시작 주가 (분배금을 다시 사는 재투자 효과는 넣지 않은 단순 합).</span><br>
     <span style="font-size:11px;">※ 시총 증감: 전월 시총을 현재 시총 × 종가 변화율로 추정한 값입니다(설정·환매에 따른 좌수 변동 미반영).</span>
   </footer>
 </div>
@@ -980,9 +985,24 @@ function getLatestPeriodLabel(today) {
   if (!r) return "데이터 없음";
   // 분배기준일이 15일 근처(±5일)면 월중, 28일 근처(말일 ±5일)면 월말로 판단
   const cycle = (r.d <= 18) ? "월중" : "월말";
-  return `${r.y}년 ${r.m}월 ${r.d}일 종가 기준 (마지막 = ${cycle} 분배)`;
+  return `${r.y}-${String(r.m).padStart(2, "0")}-${String(r.d).padStart(2, "0")} 종가 기준 (마지막 = ${cycle} 분배)`;
 }
-const TODAY = new Date();
+// ==== ★ 사이클 상수 — 매 사이클 이 2개만 바꾼다 =====================================
+// CYCLE_KEY  : 이번 분배 사이클의 월키 ("26-8")
+// CYCLE_TYPE : 이번 사이클 종류 ("월중" | "월말")
+// 나머지 월키(prevKey·prevPriorKeys·prevFallbackKey·baselineKey)는 전부 여기서 자동 파생된다.
+// (2026-08 사고: prevKey가 26-6에 멈춰 있어 8월 분배금을 6월과 비교 → 전월대비가 전부 틀렸음)
+const CYCLE_KEY  = "26-9";
+const CYCLE_TYPE = "월말";
+// ★ 2026-10-12: 화면 기준일은 '오늘 날짜'가 아니라 데이터에서 파생한다.
+//   이번 사이클 분배공시일(CYCLE_KEY·CYCLE_TYPE) 다음 날을 TODAY 로 두면 getRelevantDate 가
+//   그 공시일(전체·월말)과 같은 시점의 월중 공시일을 고른다. 데이터를 갱신하기 전에는 날짜가 앞서가지 않는다.
+//   (예: 26-9 월말 → 2026-09-28, 월중 ETF는 2026-09-11 / 시스템 날짜가 10/20 이어도 그대로)
+const DATA_ASOF = (() => {
+  const [yy, mm] = CYCLE_KEY.split("-").map(Number);
+  return getDisclosureDate(2000 + yy, mm, CYCLE_TYPE === "월중" ? 15 : 31);
+})();
+const TODAY = new Date(DATA_ASOF.getFullYear(), DATA_ASOF.getMonth(), DATA_ASOF.getDate() + 1);
 const PERIOD_LABEL = getLatestPeriodLabel(TODAY);
 
 // ==== 거시경제 지표 데이터 ============================================================
@@ -1929,13 +1949,7 @@ const ETF_DIST_OVERRIDE = {
 };
 
 // Convert raw rows to objects.
-// ==== ★ 사이클 상수 — 매 사이클 이 2개만 바꾼다 =====================================
-// CYCLE_KEY  : 이번 분배 사이클의 월키 ("26-8")
-// CYCLE_TYPE : 이번 사이클 종류 ("월중" | "월말")
-// 나머지 월키(prevKey·prevPriorKeys·prevFallbackKey·baselineKey)는 전부 여기서 자동 파생된다.
-// (2026-08 사고: prevKey가 26-6에 멈춰 있어 8월 분배금을 6월과 비교 → 전월대비가 전부 틀렸음)
-const CYCLE_KEY  = "26-9";
-const CYCLE_TYPE = "월말";
+// ==== ★ 사이클 상수(CYCLE_KEY·CYCLE_TYPE)는 위쪽 '기준일' 블록으로 옮겼다 (TODAY 계산에 먼저 필요) ====
 const CYCLE_YEAR_PREFIX = CYCLE_KEY.split("-")[0] + "-";   // "26-" — 올해 분배합 필터용 (자동 파생)
 function monthKeyShift(key, n) {
   let [y, m] = key.split("-").map(Number);
@@ -2717,7 +2731,7 @@ function renderSummary(list) {
     <div class="kpi"><div class="lbl">표시 종목</div><div class="val">${s.cnt}</div><div class="sub">월중 ${s.mid} · 월말 ${s.end}</div></div>
     <div class="kpi"><div class="lbl">합산 시총</div><div class="val">${fmtMC(s.sumMc)}</div><div class="sub">필터 적용 합계</div></div>
     <div class="kpi"><div class="lbl">평균 당월 분배율</div><div class="val">${s.avgRate.toFixed(2)}%</div><div class="sub">분배율 평균</div></div>
-    <div class="kpi"><div class="lbl">평균 1년 분배율</div><div class="val">${s.avgAnn.toFixed(2)}%</div><div class="sub">최근 12개월 분배금 기준</div></div>
+    <div class="kpi"><div class="lbl">평균 1년 분배율</div><div class="val">${s.avgAnn.toFixed(2)}%</div><div class="sub">최근 12개월 분배금 ÷ 공시일 종가</div></div>
   `;
 }
 
@@ -3170,7 +3184,7 @@ loadTaxBaseData();
 
 // ==== 주가 차트 (Chart.js + GitHub Actions 매일 갱신 정적 JSON) ================
 // CORS 프록시 영구 폐기 — 같은 도메인의 정적 JSON 파일을 읽으므로 CORS 문제 없음.
-// data/chart-prices.json은 GitHub Actions가 매일 한국시간 18:00에 자동 갱신.
+// data/chart-prices.json은 GitHub Actions가 평일 한국시간 19:15(UTC 10:15)에 자동 갱신.
 const chartDataCache = {};   // code -> 일별 시세 array (메모리 캐시)
 const chartInstances = {};   // code -> Chart instance
 
@@ -3286,8 +3300,8 @@ async function loadAndRenderChart(code, period) {
         datasets: [{
           label: code + " 종가",
           data: prices,
-          borderColor: "#e87b1a",
-          backgroundColor: "rgba(232,123,26,0.1)",
+          borderColor: "#D9542B",
+          backgroundColor: "rgba(217,84,43,0.1)",
           fill: true,
           tension: 0.25,
           borderWidth: 2,
@@ -3335,7 +3349,7 @@ async function loadAndRenderChart(code, period) {
       loadingEl.innerHTML = `<div style="color:var(--ink2); text-align:center; line-height:1.5;">
         <div>차트를 불러오지 못했습니다 (${e.message || "네트워크 오류"})</div>
         <div style="margin-top:6px; font-size:11.5px;">
-          📌 차트 데이터는 매일 한국시간 18시에 자동 갱신됩니다.<br>
+          📌 차트 데이터는 평일 한국시간 19시 15분쯤 자동 갱신됩니다.<br>
           잠시 후 다시 시도하거나, 새로고침해 주세요.
         </div>
       </div>`;
