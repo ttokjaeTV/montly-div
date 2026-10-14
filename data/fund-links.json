@@ -1,9 +1,9 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-09-29",
-"amcLinksUpdated": "2026-09-22",
-"krxDataDate": "2026-09-22",
+"generated": "2026-10-14",
+"amcLinksUpdated": "2026-10-13",
+"krxDataDate": "2026-10-13",
 "total": 191,
 "deepLink": 187,
 "deepLinkRate": 97.9,
