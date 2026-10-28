@@ -4,11 +4,11 @@
 "generated": "2026-10-29",
 "amcLinksUpdated": "2026-10-27",
 "krxDataDate": "2026-10-27",
-"total": 192,
-"deepLink": 188,
-"deepLinkRate": 97.9,
+"total": 198,
+"deepLink": 194,
+"deepLinkRate": 98.0,
 "breakdown": {
-"deep_json": 138,
+"deep_json": 144,
 "deep_isin": 35,
 "deep_ticker": 15,
 "home": 0,
@@ -772,6 +772,30 @@
 "0254S0": [
 "https://www.samsungfund.com/etf/product/view.do?id=2ETFW7",
 "KODEX 공식 상세"
+],
+"0186S0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=30",
+"1Q 공식 상세"
+],
+"0052S0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=15",
+"1Q 공식 상세"
+],
+"0206G0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=33",
+"1Q 공식 상세"
+],
+"0184E0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=28",
+"1Q 공식 상세"
+],
+"0111P0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=20",
+"1Q 공식 상세"
+],
+"0182S0": [
+"https://1qetf.com/pages/ETFproducts/ETF_info.view.php?etf_no=27",
+"1Q 공식 상세"
 ],
 "476850": [
 "https://www.samsungactive.co.kr/etf/view.do?id=2ETFM2",
