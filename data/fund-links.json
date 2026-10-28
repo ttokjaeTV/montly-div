@@ -1,14 +1,14 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-10-14",
-"amcLinksUpdated": "2026-10-13",
-"krxDataDate": "2026-10-13",
-"total": 191,
-"deepLink": 187,
+"generated": "2026-10-29",
+"amcLinksUpdated": "2026-10-27",
+"krxDataDate": "2026-10-27",
+"total": 192,
+"deepLink": 188,
 "deepLinkRate": 97.9,
 "breakdown": {
-"deep_json": 137,
+"deep_json": 138,
 "deep_isin": 35,
 "deep_ticker": 15,
 "home": 0,
@@ -768,6 +768,10 @@
 "0238P0": [
 "https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70238P0009",
 "TIGER 공식 상세"
+],
+"0254S0": [
+"https://www.samsungfund.com/etf/product/view.do?id=2ETFW7",
+"KODEX 공식 상세"
 ],
 "476850": [
 "https://www.samsungactive.co.kr/etf/view.do?id=2ETFM2",
