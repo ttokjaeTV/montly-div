@@ -1,17 +1,17 @@
 {
 "meta": {
 "source": "etf-selector/data/amc_links.json + krx_etf_master.json",
-"generated": "2026-10-29",
-"amcLinksUpdated": "2026-10-27",
-"krxDataDate": "2026-10-27",
-"total": 198,
-"deepLink": 194,
-"deepLinkRate": 98.0,
+"generated": "2026-11-12",
+"amcLinksUpdated": "2026-11-10",
+"krxDataDate": "2026-11-10",
+"total": 202,
+"deepLink": 195,
+"deepLinkRate": 96.5,
 "breakdown": {
 "deep_json": 144,
-"deep_isin": 35,
+"deep_isin": 36,
 "deep_ticker": 15,
-"home": 0,
+"home": 3,
 "naver": 4
 },
 "note": "단축코드 -> [공식 페이지 URL, 버튼 라벨]. 사전 해석 완료 — 트래커는 code만 있으면 됨"
@@ -808,6 +808,22 @@
 "0089B0": [
 "https://www.plusetf.co.kr/product/detail?n=006389",
 "PLUS 공식 상세"
+],
+"0262B0": [
+"https://investments.miraeasset.com/tigeretf/ko/product/search/detail/index.do?ksdFund=KR70262B0004",
+"TIGER 공식 상세"
+],
+"0262Y0": [
+"https://www.soletf.com/",
+"SOL 공식 사이트"
+],
+"0261H0": [
+"https://www.samsungfund.com/etf/main.do",
+"KODEX 공식 사이트"
+],
+"0259R0": [
+"https://www.aceetf.co.kr/fund",
+"ACE 공식 사이트"
 ]
 }
 }
