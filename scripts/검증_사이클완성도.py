@@ -3,7 +3,8 @@
 # 사용: cd github/montly-div && python3 scripts/검증_사이클완성도.py
 # index.html의 curKey/헤더를 '이번 사이클'로 보고, 각 데이터 파일이 이번 사이클로 갱신됐는지 ✅/❌ 출력.
 # 특히 '과표(이번 사이클)'가 미갱신이면 ❌로 크게 표시 — 2026/07 월중에 과표 누락 재발 방지용.
-import json, re, os
+import json, re, os, sys
+sys.stdout.reconfigure(encoding="utf-8")  # Windows 콘솔(cp949)에서 ✅/❌ 출력 오류 방지
 from collections import Counter
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -72,9 +73,25 @@ print(f"     └ tax-base _meta lastCycle={tb['_meta'].get('lastCycle')} / lastU
 # expense (KOFIA 시차 정상)
 print(f"ℹ expense.json    : KOFIA {exp['meta'].get('basisLabel')} (basis {exp['meta'].get('basis')}) — KOFIA는 ~1개월 시차라 사이클과 달라도 정상. 새 월말분 뜨면 갱신")
 
-print("-" * 60)
-if tax_ok:
-    print("→ 모든 사이클 데이터 반영됨. 커밋 진행 가능.")
+# 페이지 로드 검증 (2026-11-17 추가): RAW 끝 쉼표 누락처럼 node --check로 안 잡히는 오류를 실제 평가·헤드리스 로드로 잡는다.
+import subprocess, shutil, sys
+page_ok = True
+if shutil.which("node"):
+    r = subprocess.run(["node", rp("scripts", "검증_페이지로드.mjs")], capture_output=True, text=True, encoding="utf-8")
+    page_ok = r.returncode == 0
+    print("-" * 60)
+    print(f"{mark(page_ok)} 페이지 로드    : scripts/검증_페이지로드.mjs")
+    print(chr(10).join("     " + l for l in (r.stdout + r.stderr).strip().splitlines() if not l.startswith("=")))
 else:
+    page_ok = False
+    print("❌ node를 못 찾음 — scripts/검증_페이지로드.mjs를 직접 실행해 통과를 확인할 것")
+
+print("-" * 60)
+if tax_ok and page_ok:
+    print("→ 모든 사이클 데이터 반영됨. 커밋 진행 가능.")
+elif not tax_ok:
     print("→ ❌ 과표가 이번 사이클로 갱신 안 됨. 커밋 전에 ETF CHECK 과표 수집 필요 (bulk_fetch 아님, Claude-in-Chrome 5탭 병렬).")
+if not page_ok:
+    print("→ ❌ 페이지 로드 검증 실패. 커밋·push 금지, 원인(RAW 줄 끝 쉼표 등)을 고치거나 보고할 것.")
 print("=" * 60)
+sys.exit(0 if (tax_ok and page_ok) else 1)
