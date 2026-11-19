@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="icon" href="/favicon.ico">
 <title>국내 상장 월배당 ETF 트래커 · 똑재TV</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css">
@@ -389,6 +390,9 @@ table.macro tbody tr td.note-cell {
 .macro-section .label-ytd { background: var(--warn); color: #6a5018; border:1px solid var(--warn-line); }
 .macro-section .label-month { background: #d8f5e0; color: #1d6f42; border:1px solid #95d5a8; }
 
+/* 표 가로 스크롤 안내: 701~1364px에서만(700px 이하는 표가 모바일 배치로 바뀌어 스크롤 없음) */
+.tableWrap::before { content: "← 옆으로 밀어 보세요 →"; display: none; padding: 8px 0 4px; text-align: center; font-size: 12px; font-weight: 700; color: var(--ink2); }
+@media (min-width: 701px) and (max-width: 1364px) { .tableWrap::before { display: block; } }
 .tableWrap {
   background: var(--bg2);
   border:1px solid var(--line);
